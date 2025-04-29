@@ -48,7 +48,7 @@ export const filmCategories = table(
     filmTmdbId: t
       .integer("film_tmdb_id")
       .references(() => films.tmdbId, { onDelete: "cascade" }),
-    category: t.varchar("category", { length: 20 }), // 'trending', 'popular', 'featured', 'carousel'
+    category: t.varchar("category", { length: 20 }), // 'trending', 'popular', 'carousel'
     ...timestamps,
   },
   (table) => [
@@ -72,22 +72,16 @@ export const filmCategoriesRelations = relations(filmCategories, ({ one }) => ({
 export const users = table(
   "users",
   {
-    id: t.uuid("id").primaryKey().defaultRandom(),
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
     firstName: t.varchar("first_name", { length: 255 }).notNull(),
     lastName: t.varchar("last_name", { length: 255 }),
     username: t.varchar("user_name", { length: 255 }).notNull(),
     email: t.varchar("email", { length: 255 }).unique(),
-    salt: t.varchar("salt"),
     password: t.varchar("password", { length: 512 }),
-    oauthProvider: t.varchar("oauth_provider", { length: 50 }),
-    oauthId: t.varchar("oauth_id", { length: 255 }),
     role: userRoleEnum("role").default("user").notNull(),
     ...timestamps,
   },
-  (table) => [
-    t.uniqueIndex("email_idx").on(table.email),
-    t.uniqueIndex("oauth_unique").on(table.oauthProvider, table.oauthId),
-  ],
+  (table) => [t.uniqueIndex("email_idx").on(table.email)],
 );
 
 //User Favorites Table
@@ -95,7 +89,7 @@ export const userFavorites = table(
   "user_favorites",
   {
     userId: t
-      .uuid("user_id")
+      .integer("user_id")
       .references(() => users.id)
       .notNull(),
     filmTmdbId: t
@@ -116,7 +110,7 @@ export const userWatchlist = table(
   "user_watchlist",
   {
     userId: t
-      .uuid("user_id")
+      .integer("user_id")
       .references(() => users.id)
       .notNull(),
     filmTmdbId: t
