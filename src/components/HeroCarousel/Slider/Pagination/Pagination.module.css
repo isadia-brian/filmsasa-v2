@@ -1,0 +1,29 @@
+.paginationWrapper {
+  min-block-size: 22px;
+  z-index: 100;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pagination {
+  inline-size: max-content;
+  margin-inline: auto;
+
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  column-gap: 10px;
+}
+
+.paginationBtn {
+  padding: 3px;
+  border: 3px solid var(--bg-color);
+  background-color: wheat;
+  border-radius: 50%;
+}
+
+.paginationBtnActive {
+  background-color: orangered;
+}

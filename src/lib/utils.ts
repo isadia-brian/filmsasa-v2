@@ -19,3 +19,6 @@ export function backdropURL(backdropImage: string, imageWidth?: string) {
   }
   return url;
 }
+export const ensureArray = (children: React.ReactNode | React.ReactNode[]) => {
+  return Array.isArray(children) ? children : [children];
+};
