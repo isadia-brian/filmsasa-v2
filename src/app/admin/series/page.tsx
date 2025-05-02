@@ -38,7 +38,7 @@ export default async function Page(props: {
                 key={index}
                 className="relative flex flex-col items-start gap-0.5"
               >
-                <div className=" h-[230px] w-full relative rounded">
+                <div className=" h-[260px] w-full relative rounded">
                   <Image
                     src={posterURL(film.posterImage)}
                     fill
