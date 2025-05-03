@@ -1,9 +1,7 @@
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
 import SeedButton from "../_components/SeedButton";
-import { fetchMovies } from "@/features/films/server/actions/films";
-import Image from "next/image";
-import { posterURL } from "@/lib/utils";
+import { fetchMovies } from "@/features/films/server/db/films";
 import AdminPaginatedFilms from "../_components/AdminPaginatedFilms";
 
 export default async function Page(props: {

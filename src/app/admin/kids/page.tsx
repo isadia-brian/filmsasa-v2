@@ -1,7 +1,7 @@
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
 import SeedButton from "../_components/SeedButton";
-import { fetchKids } from "@/features/films/server/actions/films";
+import { fetchKids } from "@/features/films/server/db/films";
 import AdminPaginatedFilms from "../_components/AdminPaginatedFilms";
 
 export default async function Page(props: {
