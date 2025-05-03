@@ -59,3 +59,11 @@ export const fetchTrending = cache(
     }
   },
 );
+
+export const fetchDiscover = cache(
+  async (media_type: "movie" | "tv", watch_provider: string) => {
+    return;
+  },
+);
+
+//    `https://api.themoviedb.org/3/discover/${tmdbCategory}?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&watch_region=US&with_original_language=en&with_watch_providers=${stringedId}&api_key=${process.env.TMDB_API_KEY}`,

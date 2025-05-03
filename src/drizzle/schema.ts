@@ -25,11 +25,12 @@ export const films = table(
     overview: t.text("overview").notNull(),
     contentType: contentTypeEnum("content_type").notNull(),
     mediaType: mediaTypeEnum("media_type").default("movie").notNull(),
+    watchProvider: t.varchar("watch_provider"),
+    genres: t.jsonb("genres").notNull().$type<string[]>(),
+    year: t.integer("year"),
     posterImage: t.varchar("poster_image", { length: 255 }).notNull(),
     quality: t.varchar("quality", { length: 20 }).notNull().default("HD"),
     backdropImage: t.varchar("backdrop_image", { length: 255 }).notNull(),
-    genres: t.jsonb("genres").notNull().$type<string[]>(),
-    year: t.integer("year"),
     rating: t.integer("rating"),
     seasons: t.integer("seasons"),
     runtime: t.varchar("runtime"),
@@ -48,7 +49,7 @@ export const filmCategories = table(
     filmTmdbId: t
       .integer("film_tmdb_id")
       .references(() => films.tmdbId, { onDelete: "cascade" }),
-    category: t.varchar("category", { length: 20 }), // 'trending', 'popular', 'carousel'
+    category: t.varchar("category", { length: 20 }), // 'trending', 'popular',
     ...timestamps,
   },
   (table) => [
