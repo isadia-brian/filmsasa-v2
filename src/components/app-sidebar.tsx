@@ -51,16 +51,16 @@ const data = {
       items: [
         {
           title: "Carousel",
-          url: "#",
+          url: "/admin/carousel",
         },
 
         {
           title: "Trending",
-          url: "#",
+          url: "/admin/trending",
         },
         {
           title: "Popular",
-          url: "#",
+          url: "/admin/popular",
         },
       ],
     },

@@ -5,6 +5,10 @@ import { filmCategories, films } from "@/drizzle/schema";
 import { eq, and, lte, gte, isNotNull, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import fs from "fs";
+import path from "path";
+import { backdropURL } from "@/lib/utils";
+import { convertMinutes } from "@/lib/formatters";
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(async (category: string) => {
@@ -214,3 +218,104 @@ export const fetchFilmGenres = cache(async () => {
     years: sortedYears,
   };
 });
+
+export const addToCarousel = async (
+  filmId: number,
+  mediaType: "movie" | "tv",
+) => {
+  try {
+    const movieDataReq = await fetch(
+      `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+    );
+    const {
+      title: movieTitle,
+      name: tvTitle,
+      overview,
+      backdrop_path,
+      runtime: movieRuntime,
+      number_of_seasons: seasons,
+      genres: genreObjects,
+    } = await movieDataReq.json();
+
+    const title = movieTitle || tvTitle;
+    let runtime: string | null = null;
+    if (!movieRuntime) {
+      runtime = null;
+    } else {
+      runtime = convertMinutes(movieRuntime);
+    }
+    const genres = genreObjects.map(({ name }: { name: string }) => ({ name }));
+
+    // Helper function to sanitize titles for filenames
+    const sanitizeFileName = (title: string) =>
+      title
+        .toLowerCase()
+        .replace(/\s+/g, "_") // Replace spaces with underscores
+        .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
+
+    const response = await fetch(backdropURL(backdrop_path));
+    const arrayBuffer = await response.arrayBuffer();
+    const posterBuffer = Buffer.from(arrayBuffer);
+
+    // Create directory if it doesn't exist
+    const publicDir = path.join(process.cwd(), "public", "carousel");
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    // Save image to filesystem
+    const fileName = `${sanitizeFileName(title)}.jpg`;
+    const filePath = path.join(publicDir, fileName);
+    fs.writeFileSync(filePath, posterBuffer);
+
+    // Create film object with image path
+    const film = {
+      tmdbId: filmId,
+      title,
+      contentType: mediaType,
+      runtime,
+      seasons,
+      overview,
+      backdropImage: `/carousel/${fileName}`,
+      genres,
+    };
+
+    // Add to carousel data
+    const dataPath = path.join(process.cwd(), "src", "data");
+    if (!fs.existsSync(dataPath)) {
+      console.log(`Creating directory ${dataPath}`);
+      fs.mkdirSync(dataPath, { recursive: true });
+
+      console.log(`Created directory ${dataPath} successfully`);
+    }
+    const carouselFile = "carousel.ts";
+    const fullDataPath = path.join(dataPath, carouselFile);
+
+    const carouselData = fs.existsSync(fullDataPath)
+      ? require("../../../../../src/data/carousel.ts").carouselFilms
+      : [];
+
+    // Avoid duplicates
+    if (!carouselData.some((f: any) => f.tmdbId === film.tmdbId)) {
+      const updatedFilms = [...carouselData, film];
+
+      // Create data directory if it doesn't exist
+      const dataDir = path.dirname(fullDataPath);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      // Write formatted TypeScript file
+      const fileContent = `// Auto-generated carousel data
+export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
+
+      fs.writeFileSync(fullDataPath, fileContent);
+      console.log("Successfully updated carousel data");
+    }
+
+    return film;
+  } catch (error) {
+    console.error("Error processing movie:", error);
+    throw error;
+  }
+};

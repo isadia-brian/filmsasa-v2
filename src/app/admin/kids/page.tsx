@@ -2,8 +2,7 @@ import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
 import SeedButton from "../_components/SeedButton";
 import { fetchKids } from "@/features/films/server/actions/films";
-import Image from "next/image";
-import { posterURL } from "@/lib/utils";
+import AdminPaginatedFilms from "../_components/AdminPaginatedFilms";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -32,24 +31,7 @@ export default async function Page(props: {
           <div className="mb-4">
             <SeedButton contentType="kids" />
           </div>
-          <ul className="grid md:grid-cols-6 gap-2 relative">
-            {kidsFilms?.map((film, index) => (
-              <li
-                key={index}
-                className="relative flex flex-col items-start gap-0.5"
-              >
-                <div className=" h-[280px] w-full relative rounded">
-                  <Image
-                    src={posterURL(film.posterImage)}
-                    fill
-                    className="object-cover rounded"
-                    alt={film.title}
-                  />
-                </div>
-                <p className="text-sm font-medium line-clamp-1">{film.title}</p>
-              </li>
-            ))}
-          </ul>
+          <AdminPaginatedFilms allFilms={kidsFilms} />
         </div>
       </div>
     </SidebarInset>

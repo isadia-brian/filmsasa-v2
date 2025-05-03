@@ -5,9 +5,9 @@ export const convertMinutes = (runtimeInMinutes: number) => {
   let runtime: string = "";
 
   if (hours === 1) {
-    runtime = `${hours} hr ${minutes} mins`;
+    runtime = `${hours}hr ${minutes}mins`;
   } else if (hours > 1) {
-    runtime = `${hours} hrs ${minutes} mins`;
+    runtime = `${hours}hrs ${minutes}mins`;
   } else {
     runtime = `${minutes} mins`;
   }

@@ -6,19 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Heart, Play } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
-import { type Film } from "@/drizzle/schema";
 import { usePathname } from "next/navigation";
 import { AddToFavorites } from "@/features/users/server/actions/user";
 import { useToast } from "@/hooks/use-toast";
 
 type Proptype = {
-  film: Film;
-  userId: number;
+  film: CarouselFilm;
   priorityLoad?: boolean;
 };
 
 export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
-  const { film, userId, priorityLoad = false } = props;
+  const { film, priorityLoad = false } = props;
   const {
     title,
     backdropImage,
@@ -29,8 +27,6 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
     seasons,
     runtime,
   } = film;
-
-  const genresArray = genres;
 
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
@@ -62,16 +58,13 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
         }
       }
     },
-    [loading, userId, pathname, toast],
+    [loading, pathname, toast],
   );
-
-  // Optimized image URL construction
-  const imageUrl = `https://image.tmdb.org/t/p/w1280/${backdropImage}`;
 
   return (
     <div className={`relative overflow-hidden h-[60vh] md:h-[75vh] w-screen`}>
       <Image
-        src={imageUrl || ""}
+        src={backdropImage || ""}
         alt={title}
         quality={priorityLoad ? 90 : 75}
         fill
@@ -96,12 +89,12 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
           <div className={`mt-3 md:mt-0`}>
             <div className="py-2 md:max-w-[600px] mb-3 md:mb-4">
               <ul className="flex items-center gap-1 mb-3 divide-x">
-                {genresArray?.slice(0, 3).map((genre: string, idx: number) => (
+                {genres?.slice(0, 3).map(({ name }, index: number) => (
                   <li
-                    key={idx}
+                    key={index}
                     className="uppercase flex text-xs px-2 first:pl-0 leading-none text-stone-100 font-medium"
                   >
-                    {genre}
+                    {name}
                   </li>
                 ))}
               </ul>
@@ -137,9 +130,9 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
                 className={`flex items-center justify-center rounded pl-4 pr-6 h-10 backdrop-filter backdrop-blur-xs ${
                   loading
                     ? "disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    : "bg-white/90 text-black hover:bg-black hover:text-white"
+                    : "bg-white/90 text-black cursor-pointer hover:bg-black hover:text-white"
                 }`}
-                onClick={() => handleClick(tmdbId, userId)}
+                onClick={() => handleClick(tmdbId, 0)}
                 disabled={loading}
               >
                 {loading ? (
