@@ -319,3 +319,49 @@ export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
     throw error;
   }
 };
+
+export const deleteFromCarousel = cache(async (filmId: number) => {
+  try {
+    const dataPath = path.join(process.cwd(), "src", "data", "carousel.ts");
+
+    // Read current carousel data
+    const carouselData = fs.existsSync(dataPath)
+      ? require("../../../../../src/data/carousel.ts").carouselFilms
+      : [];
+
+    // Find the film to delete
+    const filmToDelete = carouselData.find((f: any) => f.tmdbId === filmId);
+    if (!filmToDelete) {
+      throw new Error("Film not found in carousel");
+    }
+
+    // Delete associated image
+    if (filmToDelete.backdropImage) {
+      const imagePath = path.join(
+        process.cwd(),
+        "public",
+        filmToDelete.backdropImage,
+      );
+
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log(`Deleted image: ${imagePath}`);
+      }
+    }
+
+    // Update carousel data
+    const updatedFilms = carouselData.filter((f: any) => f.tmdbId !== filmId);
+
+    // Write updated data back to file
+    const fileContent = `// Auto-generated carousel data
+export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
+
+    fs.writeFileSync(dataPath, fileContent);
+    console.log("Successfully removed film from carousel");
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting film:", error);
+    throw error;
+  }
+});

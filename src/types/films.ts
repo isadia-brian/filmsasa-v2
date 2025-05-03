@@ -6,6 +6,7 @@ type CarouselFilm = {
   seasons?: number;
   overview: string;
   backdropImage: string;
+  vote_average: number;
   genres: {
     name: string;
   }[];
