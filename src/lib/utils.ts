@@ -22,3 +22,34 @@ export function backdropURL(backdropImage: string, imageWidth?: string) {
 export const ensureArray = (children: React.ReactNode | React.ReactNode[]) => {
   return Array.isArray(children) ? children : [children];
 };
+
+export const providerDetails = (slug: string) => {
+  let providerId: string = "";
+  let providerTitle: string = "";
+
+  switch (slug) {
+    case "netflix":
+      providerId = "8";
+      providerTitle = "Netflix";
+      break;
+    case "apple-tv-plus":
+      providerId = "350";
+      providerTitle = "Apple TV+";
+      break;
+    case "amazon-prime-video":
+      providerId = "9";
+      providerTitle = "Amazon Prime";
+      break;
+    case "disney-plus":
+      providerId = "337";
+      providerTitle = "Disney+";
+      break;
+    case "hulu":
+      providerId = "15";
+      providerTitle = "Hulu";
+      break;
+    default:
+      break;
+  }
+  return { providerId, providerTitle };
+};

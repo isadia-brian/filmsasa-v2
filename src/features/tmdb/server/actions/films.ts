@@ -62,81 +62,92 @@ export const fetchTrending = cache(
   },
 );
 
-export const fetchProvider = unstable_cache(
-  async (media_type: string, watch_provider: string = "8") => {
-    let allFilms: TMDBFilm[] = [];
-    const discoverUrl = `${baseUrl}/discover/${media_type}?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&with_watch_providers=${watch_provider}&api_key=${process.env.TMDB_API_KEY}&page=`;
+export const fetchProvider = cache(
+  unstable_cache(
+    async (media_type: string, watch_provider: string) => {
+      let allFilms: TMDBFilm[] = [];
+      const discoverUrl = `${baseUrl}/discover/${media_type}?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&with_watch_providers=${watch_provider}&api_key=${process.env.TMDB_API_KEY}&page=`;
 
-    const urls = Array.from({ length: 10 }, (_, i) => `${discoverUrl}${i + 1}`);
-
-    try {
-      const pages = await Promise.all(
-        urls.map((url) =>
-          fetch(url, { next: { tags: ["tmdb-data"] } })
-            .then((res) => res.json())
-            .catch((error) => {
-              console.error("Fetch error:", error);
-              return { results: [] };
-            }),
-        ),
+      const urls = Array.from(
+        { length: 10 },
+        (_, i) => `${discoverUrl}${i + 1}`,
       );
 
-      allFilms = pages.flatMap((page) => page.results);
+      try {
+        const pages = await Promise.all(
+          urls.map((url) =>
+            fetch(url, { next: { tags: ["tmdb-data"] } })
+              .then((res) => res.json())
+              .catch((error) => {
+                console.error("Fetch error:", error);
+                return { results: [] };
+              }),
+          ),
+        );
 
-      console.log(`Fetched ${allFilms.length} ${media_type} films`);
-      return {
-        allFilms,
-        totalCount: allFilms.length,
-      };
-    } catch (error) {
-      console.error("Global error:", error);
-      return { allFilms: [], totalCount: 0 };
-    }
-  },
-  ["tmdb-provider-data"],
-  {
-    tags: ["tmdb-data"],
-    revalidate: 3600,
-  },
+        allFilms = pages.flatMap((page) => page.results);
+
+        console.log(`Fetched ${allFilms.length} ${media_type} films`);
+        return {
+          allFilms,
+          totalCount: allFilms.length,
+        };
+      } catch (error) {
+        console.error("Global error:", error);
+        return { allFilms: [], totalCount: 0 };
+      }
+    },
+    ["tmdb-provider-data"],
+    {
+      tags: ["tmdb-data"],
+      revalidate: 3600,
+    },
+  ),
 );
 
-export async function fetchContent(tmdbId: number, media_type: string) {
-  const res = await fetch(
-    `https://api.themoviedb.org/3/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
-    {
-      cache: "force-cache",
-    },
-  );
-  const film = await res.json();
+export const fetchContent = cache(
+  async (tmdbId: number, media_type: string) => {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
+      {
+        cache: "force-cache",
+      },
+    );
+    const film = await res.json();
 
-  const similar = film.recommendations.results;
+    const similar = film.recommendations.results;
 
-  const recommendations = similar.slice(0, 8);
+    const recommendations = similar.slice(0, 8);
 
-  const credits = film.credits.cast;
-  const actors = credits
-    .filter(
-      (star: { known_for_department: string }) =>
-        star.known_for_department === "Acting",
-    )
-    .map((actor: any) => {
-      return actor;
-    });
+    const credits = film.credits.cast;
+    const actors = credits
+      .filter(
+        (star: { known_for_department: string }) =>
+          star.known_for_department === "Acting",
+      )
+      .map((actor: any) => {
+        return actor;
+      });
 
-  const cast = actors.slice(0, 15);
+    const cast = actors.slice(0, 15);
 
-  let trailerUrl: string | undefined = "";
+    let trailerUrl: string | null = "";
+    let video_id: string | null = "";
 
-  const trailer = film.videos.results.find(
-    (video: { name: string; site: string }) =>
-      video.name.toLowerCase().includes("trailer") && video.site === "YouTube",
-  );
+    const trailer = film.videos.results.find(
+      (video: { name: string; site: string }) =>
+        video.name.toLowerCase().includes("trailer") &&
+        video.site === "YouTube",
+    );
 
-  if (!trailer) {
-    trailerUrl = undefined;
-  } else {
-    trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
-  }
+    if (!trailer) {
+      trailerUrl = null;
+      video_id = null;
+    } else {
+      trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+      video_id = trailer.key;
+    }
 
-  return { recommendations, cast, trailerUrl };
-}
+    return { recommendations, cast, trailerUrl, video_id };
+  },
+);

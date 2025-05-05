@@ -11,8 +11,8 @@ import { aquire } from "@/app/fonts";
 const TmdbContent = dynamic(
   () => import("../features/films/components/TmdbContent/"),
 );
-const Prewatch = (props: { film: any }) => {
-  const { film } = props;
+const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
+  const { film, kidsPage } = props;
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -58,7 +58,9 @@ const Prewatch = (props: { film: any }) => {
         trailerOpen ? "h-screen overflow-hidden " : "min-h-screen overflow-auto"
       }`}
     >
-      <div className="relative h-[50vh] md:h-[90vh] flex flex-col justify-center">
+      <div
+        className={`relative flex flex-col justify-center ${kidsPage ? "h-[100vh]" : "h-[50vh] md:h-[90vh]"}`}
+      >
         <div className="relative h-full w-full">
           <Image
             src={`https://image.tmdb.org/t/p/w1280${backdropImage}`}
@@ -145,13 +147,15 @@ const Prewatch = (props: { film: any }) => {
           </div>
         </div>
       </div>
-      <TmdbContent
-        media={media_type}
-        tmdbId={singleFilm}
-        trailerOpen={trailerOpen}
-        toggleYoutube={toggleYoutube}
-        title={title}
-      />
+      {!kidsPage && (
+        <TmdbContent
+          media={media_type}
+          tmdbId={singleFilm}
+          trailerOpen={trailerOpen}
+          toggleYoutube={toggleYoutube}
+          title={title}
+        />
+      )}
     </div>
   );
 };

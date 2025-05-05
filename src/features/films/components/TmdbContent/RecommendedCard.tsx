@@ -39,7 +39,11 @@ const RecommendedCard = (props: {
         className="group relative h-[110px] w-[200px] md:h-[150px] md:w-[260px] rounded-lg bg-white hover:cursor-default"
       >
         <Image
-          src={`https://image.tmdb.org/t/p/w300${backdrop_path}`}
+          src={
+            typeof backdrop_path === "string"
+              ? `https://image.tmdb.org/t/p/w300${backdrop_path}`
+              : `/placeholder.webp`
+          }
           fill
           alt={title || name}
           className="rounded-lg object-cover"

@@ -22,15 +22,18 @@ const TmdbContent = ({
 }) => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [cast, setCast] = useState<any[]>([]);
-  const [trailerUrl, setTrailerUrl] = useState<string | undefined>("");
+  const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
+
+  const [videoId, setVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const results = await fetchContent(tmdbId, media);
-      const { recommendations, cast, trailerUrl: url } = results;
+      const { recommendations, cast, trailerUrl: url, video_id } = results;
       setCast(cast);
-      setTrailerUrl(url);
       setRecommendations(recommendations);
+      setTrailerUrl(url);
+      setVideoId(video_id);
     };
     fetchData();
   }, []);
@@ -78,6 +81,7 @@ const TmdbContent = ({
       </div>
       {trailerOpen && (
         <YoutubePlayer
+          videoId={videoId}
           officialTrailer={trailerUrl}
           toggleYoutube={toggleYoutube}
           title={title}

@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -112,11 +121,37 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@layer utilities {
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@utility no-scrollbar {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+#top {
+  scroll-margin-top: 80px; /* Mobile header height */
+}
+
+@media (min-width: 768px) {
+  #top {
+    scroll-margin-top: 180px; /* Desktop header height */
   }
 }

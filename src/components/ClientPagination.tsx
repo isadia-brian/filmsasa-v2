@@ -79,7 +79,18 @@ export const ClientPagination = React.memo(
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href={prevPageUrl()} />
+            <PaginationPrevious
+              href={prevPageUrl()}
+              scroll={false}
+              onClick={() => {
+                // Manually scroll after navigation
+                setTimeout(() => {
+                  document.getElementById("top")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }, 100); // Short delay to ensure navigation completes
+              }}
+            />
           </PaginationItem>
           {Array.from(
             { length: endPage - startPage + 1 },
@@ -93,14 +104,38 @@ export const ClientPagination = React.memo(
                   : ""
               }
             >
-              <PaginationLink href={createPageURL(page)}>{page}</PaginationLink>
+              <PaginationLink
+                href={createPageURL(page)}
+                scroll={false}
+                onClick={() => {
+                  // Manually scroll after navigation
+                  setTimeout(() => {
+                    document.getElementById("top")?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                  }, 100); // Short delay to ensure navigation completes
+                }}
+              >
+                {page}
+              </PaginationLink>
             </PaginationItem>
           ))}
           <PaginationItem>
             <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext href={nextPageUrl()} />
+            <PaginationNext
+              href={nextPageUrl()}
+              scroll={false}
+              onClick={() => {
+                // Manually scroll after navigation
+                setTimeout(() => {
+                  document.getElementById("top")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }, 100); // Short delay to ensure navigation completes
+              }}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
