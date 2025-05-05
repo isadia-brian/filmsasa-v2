@@ -9,7 +9,6 @@ import fs from "fs";
 import path from "path";
 import { backdropURL } from "@/lib/utils";
 import { convertMinutes } from "@/lib/formatters";
-import { number } from "framer-motion";
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(async (category: string) => {
@@ -198,7 +197,7 @@ export const fetchSectionFilms = cache(async () => {
 });
 
 export const fetchFilmGenres = cache(async () => {
-  const films = await db.query.films.findMany({});
+  const films = await getFilms();
 
   // Handle possible undefined genres
   const allGenres = films.flatMap((film) => film.genres ?? []);
@@ -367,28 +366,16 @@ export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
   }
 });
 
-export const updatedFilms = async () => {
-  const allFilms = await getFilms({ limit: 5 });
-  return allFilms;
-};
-
-//TODO: Remove columns field from here
 export const getFilms = cache(
-  unstable_cache(async ({ limit }: { limit?: number }) => {
-    return (
-      await db.query.films.findMany({
-        columns: {
-          tmdbId: true,
-          title: true,
-        },
-        limit,
-        orderBy: (films, { desc }) => [desc(films.created_at)],
-      }),
-      ["films"],
-      {
-        tags: ["films"],
-        redvalidate: 60 * 60 * 60 * 3,
-      }
-    );
-  }),
+  unstable_cache(
+    async () => {
+      const result = await db.query.films.findMany();
+      return result;
+    },
+    ["films"],
+    {
+      tags: ["films"],
+      revalidate: 60 * 60 * 60 * 3,
+    },
+  ),
 );

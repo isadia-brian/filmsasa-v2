@@ -25,7 +25,6 @@ export const films = table(
     overview: t.text("overview").notNull(),
     contentType: contentTypeEnum("content_type").notNull(),
     mediaType: mediaTypeEnum("media_type").default("movie").notNull(),
-    watchProvider: t.varchar("watch_provider"),
     genres: t.jsonb("genres").notNull().$type<string[]>(),
     year: t.integer("year"),
     posterImage: t.varchar("poster_image", { length: 255 }).notNull(),

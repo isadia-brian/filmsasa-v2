@@ -16,7 +16,7 @@ const ImageWithSkeleton: React.FC<ImageProps> = (props) => {
         onLoad={() => setIsLoading(false)}
         alt={""}
         onError={(e) => {
-          e.currentTarget.src = "/images/placeholder.webp";
+          e.currentTarget.src = "/placeholder.webp";
         }}
       />
     </>

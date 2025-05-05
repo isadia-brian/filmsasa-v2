@@ -15,6 +15,13 @@
       "when": 1746307581751,
       "tag": "0001_alter_films",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746319490620,
+      "tag": "0002_alter_filmsv2",
+      "breakpoints": true
     }
   ]
 }

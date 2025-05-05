@@ -100,7 +100,7 @@ const page = async ({
   const categoryType = category;
 
   return (
-    <div className="w-full min-h-screen pt-[120px] pb-[50px] px-4 text-slate-200">
+    <div className="w-full min-h-screen pt-[80px] md:pt-[100px] pb-[50px] px-4 text-slate-200">
       <PageTitle title={providerTitle} />
       <div className="mb-4 flex gap-4 items-center">
         {links.map(({ name, link }: { name: string; link: string }) => (

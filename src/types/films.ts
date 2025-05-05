@@ -1,4 +1,4 @@
-type CarouselFilm = {
+export type CarouselFilm = {
   tmdbId: number;
   title: string;
   contentType: string;
@@ -11,3 +11,13 @@ type CarouselFilm = {
     name: string;
   }[];
 };
+
+export interface TMDBFilm {
+  id: number;
+  poster_path: string | null;
+  title?: string;
+  name?: string;
+  release_date?: string;
+  vote_average: number;
+  first_air_date?: string;
+}

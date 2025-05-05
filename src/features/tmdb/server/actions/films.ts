@@ -1,7 +1,9 @@
 "use server";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 const baseUrl: string = `https://api.themoviedb.org/3`;
+import { TMDBFilm } from "@/types/films";
 
 export const fetchTrending = cache(
   async (mediaType: "movie" | "tv", page: number) => {
@@ -60,10 +62,81 @@ export const fetchTrending = cache(
   },
 );
 
-export const fetchDiscover = cache(
-  async (media_type: "movie" | "tv", watch_provider: string) => {
-    return;
+export const fetchProvider = unstable_cache(
+  async (media_type: string, watch_provider: string = "8") => {
+    let allFilms: TMDBFilm[] = [];
+    const discoverUrl = `${baseUrl}/discover/${media_type}?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&with_watch_providers=${watch_provider}&api_key=${process.env.TMDB_API_KEY}&page=`;
+
+    const urls = Array.from({ length: 10 }, (_, i) => `${discoverUrl}${i + 1}`);
+
+    try {
+      const pages = await Promise.all(
+        urls.map((url) =>
+          fetch(url, { next: { tags: ["tmdb-data"] } })
+            .then((res) => res.json())
+            .catch((error) => {
+              console.error("Fetch error:", error);
+              return { results: [] };
+            }),
+        ),
+      );
+
+      allFilms = pages.flatMap((page) => page.results);
+
+      console.log(`Fetched ${allFilms.length} ${media_type} films`);
+      return {
+        allFilms,
+        totalCount: allFilms.length,
+      };
+    } catch (error) {
+      console.error("Global error:", error);
+      return { allFilms: [], totalCount: 0 };
+    }
+  },
+  ["tmdb-provider-data"],
+  {
+    tags: ["tmdb-data"],
+    revalidate: 3600,
   },
 );
 
-//    `https://api.themoviedb.org/3/discover/${tmdbCategory}?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&watch_region=US&with_original_language=en&with_watch_providers=${stringedId}&api_key=${process.env.TMDB_API_KEY}`,
+export async function fetchContent(tmdbId: number, media_type: string) {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
+    {
+      cache: "force-cache",
+    },
+  );
+  const film = await res.json();
+
+  const similar = film.recommendations.results;
+
+  const recommendations = similar.slice(0, 8);
+
+  const credits = film.credits.cast;
+  const actors = credits
+    .filter(
+      (star: { known_for_department: string }) =>
+        star.known_for_department === "Acting",
+    )
+    .map((actor: any) => {
+      return actor;
+    });
+
+  const cast = actors.slice(0, 15);
+
+  let trailerUrl: string | undefined = "";
+
+  const trailer = film.videos.results.find(
+    (video: { name: string; site: string }) =>
+      video.name.toLowerCase().includes("trailer") && video.site === "YouTube",
+  );
+
+  if (!trailer) {
+    trailerUrl = undefined;
+  } else {
+    trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+  }
+
+  return { recommendations, cast, trailerUrl };
+}
