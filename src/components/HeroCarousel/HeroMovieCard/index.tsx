@@ -7,8 +7,9 @@ import { Heart, Play } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
-import { AddToFavorites } from "@/features/users/server/actions/user";
+import { AddToFavorites } from "@/features/users/server/actions";
 import { useToast } from "@/hooks/use-toast";
+import { CarouselFilm } from "@/types/films";
 
 type Proptype = {
   film: CarouselFilm;

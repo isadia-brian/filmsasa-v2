@@ -1,5 +1,8 @@
 import { HeroCarousel } from "@/components/HeroCarousel";
+import CategoryGrid from "@/components/sections/SectionTwoGrid";
 import NetworkProviders from "@/components/sections/NetworkProviders";
+import { Suspense } from "react";
+import SectionFilter from "@/components/sections/SectionOneGrid";
 
 export default async function Home() {
   return (
@@ -7,6 +10,10 @@ export default async function Home() {
       <main>
         <HeroCarousel />
         <NetworkProviders />
+        <Suspense>
+          <SectionFilter />
+        </Suspense>
+        <CategoryGrid />
       </main>
     </div>
   );

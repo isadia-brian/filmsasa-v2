@@ -25,9 +25,11 @@ export interface FadeInProps {
   className?: string;
 }
 
+// User types
+
 export type UserRole = "user" | "admin";
 export type User = {
-  id: string;
+  id: number;
   email: string | null;
   role: UserRole;
   username: string;

@@ -12,7 +12,7 @@ export type CarouselFilm = {
   }[];
 };
 
-export interface TMDBFilm {
+export type TMDBFilm = {
   id: number;
   poster_path: string | null;
   title?: string;
@@ -20,4 +20,18 @@ export interface TMDBFilm {
   release_date?: string;
   vote_average: number;
   first_air_date?: string;
+};
+
+export interface FilmCardProps {
+  section?: boolean;
+  page?: string;
+  film: {
+    tmdbId: number;
+    title: string;
+    posterImage: string;
+    contentType: "movie" | "tv" | "kids";
+    rating?: number;
+    mediaType?: string;
+    year?: number;
+  };
 }

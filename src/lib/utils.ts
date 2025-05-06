@@ -53,3 +53,27 @@ export const providerDetails = (slug: string) => {
   }
   return { providerId, providerTitle };
 };
+
+export const getCardLink = (
+  category: "movie" | "tv" | "kids",
+  tmdbId: number,
+) => {
+  let cardLink: string = "";
+  switch (category) {
+    case "tv":
+      cardLink = `/series/${tmdbId}`;
+      break;
+
+    case "movie":
+      cardLink = `/movies/${tmdbId}`;
+      break;
+
+    case "kids":
+      cardLink = `/kids/${tmdbId}`;
+      break;
+
+    default:
+      break;
+  }
+  return cardLink;
+};

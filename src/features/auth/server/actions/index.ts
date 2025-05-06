@@ -1,0 +1,176 @@
+"use server";
+
+import { SignUpFormSchema, FormState, LoginFormSchema } from "../../schemas";
+import { db } from "@/drizzle";
+import { users } from "@/drizzle/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import { createSession, destroySession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { generateUsername } from "unique-username-generator";
+import { cache } from "react";
+
+export async function modalSignUp(state: FormState, formData: FormData) {
+  try {
+    const validatedFields = SignUpFormSchema.safeParse({
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+    // If any form fields are invalid, return early
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+    const { firstName, lastName, email, password } = validatedFields.data;
+    // Check for existing user
+    //
+
+    const existingUser = await checkExistingUser(email);
+
+    if (existingUser) {
+      return {
+        errors: {
+          email: ["That email is already in use"],
+        },
+      };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const username = generateUsername();
+
+    //create a user in the db
+    const [data] = await db
+      .insert(users)
+      .values({
+        firstName,
+        lastName,
+        username,
+        email,
+        password: hashedPassword,
+      })
+      .returning({ id: users.id });
+    const user = data;
+    if (!user) {
+      return {
+        success: false,
+        message: "An error occured while creating the user",
+      };
+    }
+    return {
+      success: true,
+      message: "Successfully created account",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "An Error occured on the server while processing the request",
+    };
+  }
+}
+
+export async function signup(state: FormState, formData: FormData) {
+  // Validate form fields
+  const validatedFields = SignUpFormSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  // If any form fields are invalid, return early
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const { firstName, lastName, email, password } = validatedFields.data;
+  // Check for existing user
+  //
+
+  const existingUser = await checkExistingUser(email);
+
+  if (existingUser) {
+    return {
+      errors: {
+        email: ["That email is already in use"],
+      },
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const username = generateUsername();
+
+  //create a user in the db
+  const [data] = await db
+    .insert(users)
+    .values({
+      firstName,
+      lastName,
+      username,
+      email,
+      password: hashedPassword,
+    })
+    .returning({ id: users.id });
+  const user = data;
+  if (!user) {
+    return {
+      errors: {
+        email: ["An error occured while trying to creating the account"],
+      },
+    };
+  }
+
+  redirect("/auth/login");
+}
+
+export const signin = async (state: FormState, formData: FormData) => {
+  const validatedFields = LoginFormSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const { email, password } = validatedFields.data;
+
+  // Check for existing user
+  const existingUser = await checkExistingUser(email);
+
+  if (!existingUser) {
+    return {
+      errors: {
+        email: ["The email used has not been registered"],
+      },
+    };
+  }
+
+  if (!bcrypt.compareSync(password, existingUser.password!)) {
+    return {
+      errors: {
+        email: ["Invalid email or password"],
+      },
+    };
+  }
+
+  await createSession(existingUser.id, existingUser.role);
+
+  redirect("/");
+};
+
+export const logout = async () => {
+  await destroySession();
+  redirect("/");
+};
+
+const checkExistingUser = cache(async (email: string) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+  });
+  return user;
+});
