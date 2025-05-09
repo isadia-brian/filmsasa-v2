@@ -12,12 +12,16 @@ const Modal = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+
+    document.body.style.overflow = "visible";
 
     return () => {
       document.body.style.overflow = "visible";
     };
-  }, []);
+  }, [isOpen]);
 
   return (
     <div>

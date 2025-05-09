@@ -8,6 +8,7 @@ import Link from "next/link";
 import UserAvatar from "../UserAvatar";
 import dynamic from "next/dynamic";
 import { User } from "@/types";
+import FilmsSearch from "../FilmsSearch";
 
 const ProfileCard = dynamic(() => import("../ProfileCard"));
 //import MainSearch from "./MainSearch";
@@ -181,12 +182,14 @@ const NavbarClient = ({ user }: { user: User }) => {
                 <AlignJustify className="text-neutral-900 h-6 w-5" />
               </button>
 
-              <div
-                className="flex items-center cursor-pointer"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                <UserAvatar user={user} />
+              <div className="flex items-center gap-2 cursor-pointer">
+                <FilmsSearch />
+                <div
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <UserAvatar user={user} />
+                </div>
               </div>
             </div>
           </div>

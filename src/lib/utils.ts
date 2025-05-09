@@ -8,7 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 export function posterURL(poster_path: string | null) {
   return `https://image.tmdb.org/t/p/w600_and_h900_bestv2${poster_path}`;
 }
-
+export function smallPosterURL(poster_path: string | null) {
+  return `https://image.tmdb.org/t/p/w185${poster_path}`;
+}
 export function backdropURL(backdropImage: string, imageWidth?: string) {
   let url: string = "";
 

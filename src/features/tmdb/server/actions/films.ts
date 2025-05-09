@@ -5,6 +5,39 @@ import { unstable_cache } from "next/cache";
 const baseUrl: string = `https://api.themoviedb.org/3`;
 import { TMDBFilm } from "@/types/films";
 
+export async function searchContent(query: string) {
+  const response = await fetch(
+    `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(
+      query,
+    )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+  );
+  const { results } = await response.json();
+  return results.map(
+    ({
+      id,
+      poster_path,
+      title,
+      name,
+      media_type,
+      profile_path,
+    }: {
+      id: string;
+      poster_path: string;
+      name: string;
+      media_type: string;
+      profile_path: string;
+      title: string;
+    }) => ({
+      id,
+      poster_path,
+      title,
+      media_type,
+      name,
+      profile_path,
+    }),
+  );
+}
+
 export const fetchTrending = cache(
   async (mediaType: "movie" | "tv", page: number) => {
     const trendingUrl = `${baseUrl}/trending/${mediaType}/week?language=en-US&page=${page}&api_key=${process.env.TMDB_API_KEY}`;
