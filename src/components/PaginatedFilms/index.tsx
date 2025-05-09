@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Heart, Star } from "lucide-react";
-import Pagination from "./Pagination";
 import type { Film } from "@/drizzle/schema";
 import { posterURL } from "@/lib/utils";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import { ClientPagination } from "../ClientPagination";
 
 const PaginatedFilms = ({
   allFilms,
@@ -91,10 +91,10 @@ const PaginatedFilms = ({
         })}
       </ul>
       <div>
-        <Pagination
-          totalCount={totalCount}
-          currentPage={currentPage} // 1
-          pageSize={pageSize}
+        <ClientPagination
+          totalItems={totalCount}
+          currentPage={currentPage}
+          itemsPerPage={pageSize}
         />
       </div>
     </div>

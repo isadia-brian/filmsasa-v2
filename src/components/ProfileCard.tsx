@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Film, Moon, UserRound } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -15,16 +9,32 @@ import { User } from "@/types";
 const UserAvatar = dynamic(() => import("./UserAvatar"));
 
 const ProfileCard = ({ user }: { user: User }) => {
+  if (!user) {
+    return (
+      <div className="relative rounded-xl w-[250px] bg-slate-200  px-2 py-2 flex flex-col gap-2">
+        <p className="text-sm text-center">Sign In to view your account</p>
+
+        <Link
+          href={"/auth/login"}
+          className="flex text-sm py-3 items-center justify-center bg-neutral-600 text-neutral-100 cursor-pointer rounded-lg"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
   return (
-    <Card className=" rounded-(--card-radius) divide-y-[1px] max-w-[500px] [--card-radius:var(--radius-3xl)]">
-      <CardHeader className="flex flex-row gap-2 p-2">
+    <div className="rounded-xl divide-y-[1px] divide-neutral-500 w-[250px] bg-slate-200">
+      <div className="flex gap-2 p-2">
         <UserAvatar user={user} size="lg" />
         <div className="flex flex-col">
-          <p className="font-semibold text-neutral-800">{user?.username}</p>
-          <p className="text-gray-500 text-[2px]">{user?.email}</p>
+          <p className="font-semibold text-neutral-800">{"isadia"}</p>
+          <p className="text-neutral-700 text-xs break-all">
+            {"developerisadia@gmail.com"}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="px-2 py-2 text-sm">
+      </div>
+      <div className="px-2 py-2 text-sm">
         <div className="flex flex-col gap-1">
           <Link
             href={`/account/lists`}
@@ -51,7 +61,7 @@ const ProfileCard = ({ user }: { user: User }) => {
             </span>
             Account Settings
           </Link>
-          <div className="transition-colors group flex items-center gap-2 py-3  px-2 hover:bg-neutral-300 hover:text-neutral-950 rounded-lg">
+          <div className="transition-colors group flex items-center gap-2 py-3 cursor-pointer  px-2 hover:bg-neutral-300 hover:text-neutral-950 rounded-lg">
             <span>
               <Moon
                 size={16}
@@ -61,9 +71,16 @@ const ProfileCard = ({ user }: { user: User }) => {
             Dark Mode
           </div>
         </div>
-      </CardContent>
-      <CardFooter className="p-2">{/* <LogoutButton />*/}</CardFooter>
-    </Card>
+      </div>
+      <div className="px-2 pt-1.5 pb-2  w-full">
+        <button
+          type="button"
+          className=" text-sm  w-full py-3 items-center bg-neutral-600 text-neutral-100 cursor-pointer rounded-lg"
+        >
+          Log out
+        </button>
+      </div>
+    </div>
   );
 };
 

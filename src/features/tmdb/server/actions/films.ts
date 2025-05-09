@@ -62,6 +62,61 @@ export const fetchTrending = cache(
   },
 );
 
+export const fetchPopular = cache(
+  async (mediaType: "movie" | "tv", page: number) => {
+    const popularUrl = `${baseUrl}/${mediaType}/popular?language=en-US&page=${page}&api_key=${process.env.TMDB_API_KEY}`;
+
+    try {
+      const response = await fetch(popularUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+      }
+
+      const { results } = await response.json();
+      if (!results) return;
+
+      return results
+        .map(
+          ({
+            id,
+            poster_path,
+            title,
+            name,
+            original_language,
+            vote_average,
+          }: {
+            id: string;
+            poster_path: string;
+            title: string;
+            name: string;
+            original_language: string;
+            vote_average: number;
+          }) => ({
+            id,
+            poster_path,
+            title,
+            name,
+            media_type: mediaType,
+            original_language,
+            vote_average,
+          }),
+        )
+        .filter(
+          ({
+            original_language,
+            vote_average,
+          }: {
+            original_language: string;
+            vote_average: number;
+          }) => original_language === "en" && vote_average >= 5,
+        );
+    } catch (error) {
+      console.error(error);
+      throw new Error("An error occured while fetching");
+    }
+  },
+);
+
 export const fetchProvider = cache(
   unstable_cache(
     async (media_type: string, watch_provider: string) => {

@@ -1,11 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { addToCarousel } from "@/features/films/server/actions/films";
-import { fetchTrending } from "@/features/tmdb/server/actions/films";
+import { addToCarousel } from "@/features/films/server/db/films";
+import {
+  fetchPopular,
+  fetchTrending,
+} from "@/features/tmdb/server/actions/films";
 import { posterURL } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
+import { addFilmCategory } from "../../actions/tmdb";
+import { useToast } from "@/hooks/use-toast";
 
 type Film = {
   poster_path: string;
@@ -15,17 +20,30 @@ type Film = {
   vote_average: number;
 };
 
-const CarouselFilms = () => {
+const FeaturedFilms = ({
+  title,
+  category,
+}: {
+  title?: string;
+  category: string;
+}) => {
   const [films, setFilms] = useState<Film[]>([]);
   const [page, setPage] = useState<number>(1);
   const [mediaType, setMediaType] = useState<"movie" | "tv">("movie");
   const [isLoading, setIsLoading] = useState(false);
 
+  const { toast } = useToast();
+
   const handleClick = useCallback(
     async (content: "movie" | "tv", currentPage: number) => {
       try {
         setIsLoading(true);
-        const data = await fetchTrending(content, currentPage);
+        let data: any = [];
+        if (category === "popular") {
+          data = await fetchPopular(content, currentPage);
+        } else {
+          data = await fetchTrending(content, currentPage);
+        }
 
         if (!data) {
           setFilms([]);
@@ -44,13 +62,51 @@ const CarouselFilms = () => {
     [isLoading, mediaType, films, page],
   );
 
+  const PostToCategory = async (
+    category: string,
+    filmId: number,
+    mediaType: "movie" | "tv",
+  ) => {
+    if (category === "carousel") {
+      return await addToCarousel(filmId, mediaType);
+    } else {
+      const { success, message } = await addFilmCategory(
+        filmId,
+        mediaType,
+        category,
+      );
+
+      console.log(success, message);
+
+      if (success) {
+        console.log("Yes success = true");
+        toast({
+          title: "Success",
+          description: message,
+        });
+      } else {
+        console.log("No success = false");
+        toast({
+          title: "Error",
+          variant: "destructive",
+          description: message,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     handleClick("movie", 1);
   }, []);
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-3">
+      {title && (
+        <div>
+          <h3 className="font-bold uppercase">{title}</h3>
+        </div>
+      )}
+      <div className="flex justify-between items-center my-3">
         <div className="flex items-center gap-2">
           <Button
             className="rounded-none w-[100px] cursor-pointer"
@@ -99,16 +155,16 @@ const CarouselFilms = () => {
                     alt={film?.title || film.name}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
-                  <div className="absolute right-1.5 top-1.5 h-10 w-10 bg-red-500 text-white rounded-full flex items-center justify-center">
+                  <div className="absolute right-1.5 top-1.5 px-2 py-2 w-10 bg-red-500 text-white rounded-md flex items-center justify-center">
                     <p>{Math.round(film.vote_average * 10) / 10}</p>
                   </div>
                 </div>
                 <Button
                   className="cursor-pointer"
                   disabled={isLoading}
-                  onClick={() => addToCarousel(film.id, mediaType)}
+                  onClick={() => PostToCategory(category, film.id, mediaType)}
                 >
-                  Add to carousel
+                  Add to {category}
                 </Button>
               </li>
             ))}
@@ -119,4 +175,4 @@ const CarouselFilms = () => {
   );
 };
 
-export default CarouselFilms;
+export default FeaturedFilms;

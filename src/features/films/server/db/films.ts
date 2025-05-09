@@ -9,6 +9,8 @@ import fs from "fs";
 import path from "path";
 import { backdropURL } from "@/lib/utils";
 import { convertMinutes } from "@/lib/formatters";
+import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(async (category: string) => {
@@ -313,6 +315,10 @@ export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
       console.log("Successfully updated carousel data");
     }
 
+    revalidateTag("carousel");
+    revalidatePath("/admin/carousel");
+    revalidatePath("/");
+
     return film;
   } catch (error) {
     console.error("Error processing movie:", error);
@@ -332,7 +338,7 @@ export const deleteFromCarousel = cache(async (filmId: number) => {
     // Find the film to delete
     const filmToDelete = carouselData.find((f: any) => f.tmdbId === filmId);
     if (!filmToDelete) {
-      throw new Error("Film not found in carousel");
+      return;
     }
 
     // Delete associated image
@@ -345,7 +351,6 @@ export const deleteFromCarousel = cache(async (filmId: number) => {
 
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
-        console.log(`Deleted image: ${imagePath}`);
       }
     }
 
@@ -357,7 +362,10 @@ export const deleteFromCarousel = cache(async (filmId: number) => {
 export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
 
     fs.writeFileSync(dataPath, fileContent);
-    console.log("Successfully removed film from carousel");
+
+    revalidateTag("carousel");
+    revalidatePath("/admin/carousel");
+    revalidatePath("/");
 
     return true;
   } catch (error) {
