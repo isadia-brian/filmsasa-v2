@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import Image from "next/image";
 import { mangrotesque } from "@/app/fonts";
 import { Links } from "@/data/links";
 
 const Footer = async () => {
-  const currentYear: number = 2025;
+  const currentYear = new Date().getFullYear();
 
   return (
-    <div className={`relative text-white py-10 bg-neutral-800 h-full `}>
+    <div className={`relative text-white pt-10 pb-2 bg-neutral-800 h-full `}>
       <div className="h-full mx-auto lg:max-w-[2000px] w-full">
         <div className="px-4 h-full w-full">
           <div className="pt-[40px] md:pt-8">
@@ -62,26 +61,8 @@ const Footer = async () => {
                 </li>
               ))}
             </ul>
-            <div className="mb-[20px] md:mb-[5px] flex items-center space-x-4 lg:space-x-12">
-              <div className="relative h-9 w-9 md:h-[80px] md:w-[80px] lg:h-[130px] lg:w-[130px] ">
-                <Image
-                  src="/logo.webp"
-                  fill
-                  alt="logo"
-                  quality={100}
-                  sizes="(max-width:768px) 100vw 130px"
-                  className="object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <Link
-                href={"/"}
-                className="text-5xl md:text-[120px] lg:text-[200px] md:leading-none font-black lg:leading-none"
-              >
-                FILMSASA
-              </Link>
-            </div>
-            <div className="flex items-center space-x-3 text-[14px] md:text-[16px] pt-3 md:pt-5 border-t-[0.5px] border-white">
+
+            <div className="flex items-center space-x-3 text-sm pt-2 border-t-[0.5px] border-white">
               <p>© {currentYear} Filmsasa</p>
               <div className="h-[3px] w-[3px] rounded-full bg-white" />
               <p>Developed by Isadia</p>
