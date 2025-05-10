@@ -7,7 +7,7 @@ import { Heart, Play } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
-import { AddToFavorites } from "@/features/users/server/actions";
+import { AddToFavorites } from "@/features/users/server/db";
 import { useToast } from "@/hooks/use-toast";
 import { CarouselFilm } from "@/types/films";
 

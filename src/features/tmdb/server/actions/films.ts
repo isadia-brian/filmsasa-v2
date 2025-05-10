@@ -2,8 +2,10 @@
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-const baseUrl: string = `https://api.themoviedb.org/3`;
 import { TMDBFilm } from "@/types/films";
+import { convertMinutes } from "@/lib/formatters";
+
+const baseUrl: string = `https://api.themoviedb.org/3`;
 
 export async function searchContent(query: string) {
   const response = await fetch(
@@ -45,7 +47,8 @@ export const fetchTrending = cache(
     try {
       const response = await fetch(trendingUrl);
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        console.error(`HTTP ${response.status} - ${response.statusText}`);
+        return;
       }
 
       const { results } = await response.json();
@@ -102,7 +105,8 @@ export const fetchPopular = cache(
     try {
       const response = await fetch(popularUrl);
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        console.error(`HTTP ${response.status} - ${response.statusText}`);
+        return;
       }
 
       const { results } = await response.json();
@@ -196,7 +200,7 @@ export const fetchProvider = cache(
 export const fetchContent = cache(
   async (tmdbId: number, media_type: string) => {
     const res = await fetch(
-      `https://api.themoviedb.org/3/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
+      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
       {
         cache: "force-cache",
       },
@@ -237,5 +241,69 @@ export const fetchContent = cache(
     }
 
     return { recommendations, cast, trailerUrl, video_id };
+  },
+);
+
+export const searchFilm = cache(
+  async (media_type: "movie" | "tv", filmId: number) => {
+    const url = `${baseUrl}/${media_type}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error(`HTTP ${response.status} - ${response.statusText}`);
+        return;
+      }
+
+      const data = await response.json();
+      if (!data) return;
+
+      const {
+        id,
+        original_title,
+        original_name,
+        genres: genreObjects,
+        first_air_date,
+        release_date,
+        overview,
+        runtime: movieDuration,
+        poster_path,
+        backdrop_path,
+        number_of_seasons,
+        vote_average,
+      } = data;
+
+      let humanizedDuration: string | null = null;
+      let year: number | null = null;
+
+      if (media_type === "movie") {
+        humanizedDuration = convertMinutes(movieDuration);
+        year = parseInt(release_date.split("-")[0]);
+      } else {
+        humanizedDuration = null;
+        year = parseInt(first_air_date.split("-")[0]);
+      }
+
+      const genres = genreObjects.map(({ name }: { name: string }) => name);
+
+      const film = {
+        tmdbId: id,
+        title: original_name || original_title,
+        overview,
+        genres,
+        posterImage: poster_path,
+        backdropImage: backdrop_path,
+        seasons: number_of_seasons,
+        runtime: humanizedDuration,
+        year,
+        rating: Math.round(vote_average),
+        media_type,
+      };
+
+      return film;
+    } catch (error) {
+      console.log(`There was a server error: ${error}`);
+      return;
+    }
   },
 );
