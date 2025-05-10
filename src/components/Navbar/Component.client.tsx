@@ -8,7 +8,7 @@ import Link from "next/link";
 import UserAvatar from "../UserAvatar";
 import dynamic from "next/dynamic";
 import { User } from "@/types";
-import FilmsSearch from "../FilmsSearch";
+import FilmsSearchModal from "../FilmsSearchModal";
 
 const ProfileCard = dynamic(() => import("../ProfileCard"));
 //import MainSearch from "./MainSearch";
@@ -183,7 +183,7 @@ const NavbarClient = ({ user }: { user: User }) => {
               </button>
 
               <div className="flex items-center gap-2 cursor-pointer">
-                <FilmsSearch />
+                <FilmsSearchModal />
                 <div
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
