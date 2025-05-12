@@ -9,22 +9,34 @@ import { createSession, destroySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { generateUsername } from "unique-username-generator";
 import { cache } from "react";
+import { revalidatePath } from "next/cache";
 
 export async function modalSignUp(state: FormState, formData: FormData) {
   try {
+    const passwordsMatch =
+      formData.get("password") === formData.get("confirmPassword");
+
+    if (!passwordsMatch) {
+      return {
+        success: false,
+        errors: {
+          password: ["*Passwords don't match"],
+        },
+      };
+    }
+
     const validatedFields = SignUpFormSchema.safeParse({
-      firstName: formData.get("firstName"),
-      lastName: formData.get("lastName"),
       email: formData.get("email"),
       password: formData.get("password"),
     });
     // If any form fields are invalid, return early
     if (!validatedFields.success) {
       return {
+        success: false,
         errors: validatedFields.error.flatten().fieldErrors,
       };
     }
-    const { firstName, lastName, email, password } = validatedFields.data;
+    const { email, password } = validatedFields.data;
     // Check for existing user
     //
 
@@ -32,6 +44,7 @@ export async function modalSignUp(state: FormState, formData: FormData) {
 
     if (existingUser) {
       return {
+        success: false,
         errors: {
           email: ["That email is already in use"],
         },
@@ -45,8 +58,6 @@ export async function modalSignUp(state: FormState, formData: FormData) {
     const [data] = await db
       .insert(users)
       .values({
-        firstName,
-        lastName,
         username,
         email,
         password: hashedPassword,
@@ -71,11 +82,56 @@ export async function modalSignUp(state: FormState, formData: FormData) {
   }
 }
 
+export const modalSignIn = async (state: FormState, formData: FormData) => {
+  try {
+    const validatedFields = LoginFormSchema.safeParse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+    const { email, password } = validatedFields.data;
+
+    // Check for existing user
+    const existingUser = await checkExistingUser(email);
+
+    if (!existingUser) {
+      return {
+        errors: {
+          email: ["The email used has not been registered"],
+        },
+      };
+    }
+
+    if (!bcrypt.compareSync(password, existingUser.password!)) {
+      return {
+        errors: {
+          email: ["Invalid email or password"],
+        },
+      };
+    }
+
+    await createSession(existingUser.id, existingUser.role);
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: `An error occured on the server`,
+    };
+  }
+};
+
 export async function signup(state: FormState, formData: FormData) {
   // Validate form fields
   const validatedFields = SignUpFormSchema.safeParse({
-    firstName: formData.get("firstName"),
-    lastName: formData.get("lastName"),
     email: formData.get("email"),
     password: formData.get("password"),
   });
@@ -86,7 +142,7 @@ export async function signup(state: FormState, formData: FormData) {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const { firstName, lastName, email, password } = validatedFields.data;
+  const { email, password } = validatedFields.data;
   // Check for existing user
   //
 
@@ -107,8 +163,6 @@ export async function signup(state: FormState, formData: FormData) {
   const [data] = await db
     .insert(users)
     .values({
-      firstName,
-      lastName,
       username,
       email,
       password: hashedPassword,
@@ -160,12 +214,26 @@ export const signin = async (state: FormState, formData: FormData) => {
 
   await createSession(existingUser.id, existingUser.role);
 
+  revalidatePath("/");
+
   redirect("/");
 };
 
 export const logout = async () => {
-  await destroySession();
-  redirect("/");
+  try {
+    await destroySession();
+    revalidatePath("/");
+    return {
+      success: true,
+      message: `Successfully signed out`,
+    };
+  } catch (error) {
+    console.error("An error occured", error);
+    return {
+      success: false,
+      message: `An error occurred on the server`,
+    };
+  }
 };
 
 const checkExistingUser = cache(async (email: string) => {

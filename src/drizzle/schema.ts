@@ -73,8 +73,6 @@ export const users = table(
   "users",
   {
     id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
-    firstName: t.varchar("first_name", { length: 255 }).notNull(),
-    lastName: t.varchar("last_name", { length: 255 }),
     username: t.varchar("user_name", { length: 255 }).notNull(),
     email: t.varchar("email", { length: 255 }).unique(),
     password: t.varchar("password", { length: 512 }),

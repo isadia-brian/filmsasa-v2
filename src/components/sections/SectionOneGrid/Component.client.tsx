@@ -18,9 +18,8 @@ import { getUserLists } from "@/features/users/server/db";
 import { User } from "@/types";
 import { FilmCardProps } from "@/types/films";
 
-const Modal = dynamic(() => import("../../modal"));
-const AuthForms = dynamic(
-  () => import("../../../features/auth/components/AuthForms"),
+const AuthModal = dynamic(
+  () => import("../../../features/auth/components/AuthModal"),
 );
 
 const headerButtons = [
@@ -209,9 +208,7 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
     <div className=" text-white mb-5 relative w-full">
       {showAuth && (
         <div>
-          <Modal>
-            <AuthForms toggleAuth={() => setShowAuth(false)} />
-          </Modal>
+          <AuthModal toggleAuth={() => setShowAuth(false)} />
         </div>
       )}
 

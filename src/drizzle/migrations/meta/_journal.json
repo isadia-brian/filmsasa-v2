@@ -22,6 +22,13 @@
       "when": 1746319490620,
       "tag": "0002_alter_filmsv2",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747029013032,
+      "tag": "0003_alter_user",
+      "breakpoints": true
     }
   ]
 }

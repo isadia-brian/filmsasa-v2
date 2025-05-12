@@ -11,7 +11,6 @@ import { User } from "@/types";
 import FilmsSearchModal from "../FilmsSearchModal";
 
 const ProfileCard = dynamic(() => import("../ProfileCard"));
-//import MainSearch from "./MainSearch";
 const navLinks = [
   {
     title: "Home",

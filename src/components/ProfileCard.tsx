@@ -3,8 +3,8 @@
 import { Film, Moon, UserRound } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-//import LogoutButton from "@/app/auth/LogoutButton"
 import { User } from "@/types";
+import { logout } from "@/features/auth/server/actions";
 
 const UserAvatar = dynamic(() => import("./UserAvatar"));
 
@@ -74,6 +74,7 @@ const ProfileCard = ({ user }: { user: User }) => {
       </div>
       <div className="px-2 pt-1.5 pb-2  w-full">
         <button
+          onClick={async () => await logout()}
           type="button"
           className=" text-sm  w-full py-3 items-center bg-neutral-600 text-neutral-100 cursor-pointer rounded-lg"
         >

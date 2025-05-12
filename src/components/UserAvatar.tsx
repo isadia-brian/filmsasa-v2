@@ -1,5 +1,3 @@
-"use client";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/types";
 import { User as LucideUser } from "lucide-react";
@@ -7,15 +5,15 @@ import { User as LucideUser } from "lucide-react";
 const UserAvatar = ({ user, size }: { user: User; size?: string }) => {
   if (!user) {
     return (
-      <Avatar className={`${size === "lg" ? "h-10 w-10" : ""}`}>
+      <Avatar className={`bg-white${size === "lg" ? "h-10 w-10" : ""}`}>
         <AvatarFallback>
-          <LucideUser />
+          <LucideUser className="h-full" size={20} color="black" />
         </AvatarFallback>
       </Avatar>
     );
   }
 
-  const { username } = user;
+  const { username } = user ?? null;
 
   const userInitial = username?.charAt(0).toUpperCase();
 
