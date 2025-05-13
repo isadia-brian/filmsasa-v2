@@ -66,7 +66,7 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
             src={`https://image.tmdb.org/t/p/w1280${backdropImage}`}
             alt={title}
             fill
-            quality={80}
+            quality={70}
             className="object-cover"
             priority={true}
             sizes="

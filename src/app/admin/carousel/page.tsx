@@ -5,6 +5,7 @@ import FeaturedFilms from "../_components/FeaturedFilms";
 import { carouselFilms } from "@/data/carousel";
 import Image from "next/image";
 import DeleteBtn from "../_components/FeaturedFilms/DeleteBtn";
+import { fetchCarouselAction } from "@/features/films/server/db/films";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -14,7 +15,7 @@ export default async function Page(props: {
   //const searchParams = await props.searchParams;
   //const query = searchParams?.query ?? "";
 
-  const films = carouselFilms;
+  const films = await fetchCarouselAction();
 
   return (
     <SidebarInset>

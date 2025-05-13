@@ -1,15 +1,24 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useActionState } from "react";
+import { signin } from "../../server/actions";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [state, action, pending] = useActionState(signin, undefined);
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+      action={action}
+    >
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl text-slate-50 font-bold">
           Login to your account
@@ -26,10 +35,14 @@ export function LoginForm({
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            name="email"
+            placeholder="doe@example.com"
             required
             className="text-neutral-50"
           />
+          {state?.errors.email && (
+            <p className="text-xs text-red-500">{state.errors.email}</p>
+          )}
         </div>
         <div className="grid gap-3">
           <div className="flex items-center">
@@ -46,15 +59,28 @@ export function LoginForm({
           <Input
             id="password"
             type="password"
+            name="password"
             required
             className="text-neutral-50"
           />
+          {state?.errors?.password && (
+            <div>
+              <ul>
+                {state.errors.password.map((error) => (
+                  <li key={error} className="text-xs text-red-500">
+                    {error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         <Button
           type="submit"
+          disabled={pending}
           className="w-full bg-gray-50 text-gray-900 hover:bg-gray-100 cursor-pointer "
         >
-          Login
+          {pending ? "Submitting" : "Login"}
         </Button>
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-neutral-400 text-neutral-800 relative z-10 px-2">

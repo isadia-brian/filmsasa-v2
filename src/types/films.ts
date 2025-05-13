@@ -3,13 +3,11 @@ export type CarouselFilm = {
   title: string;
   contentType: string;
   runtime: string | null;
-  seasons?: number;
+  seasons: number | null;
   overview: string;
   backdropImage: string;
-  vote_average: number;
-  genres: {
-    name: string;
-  }[];
+  rating: number;
+  genres: string[];
 };
 
 export type TMDBFilm = {

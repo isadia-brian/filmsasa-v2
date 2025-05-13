@@ -29,6 +29,13 @@
       "when": 1747029013032,
       "tag": "0003_alter_user",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1747058305626,
+      "tag": "0004_insert_carousel_film",
+      "breakpoints": true
     }
   ]
 }

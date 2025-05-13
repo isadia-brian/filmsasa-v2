@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { addToCarousel } from "@/features/films/server/db/films";
+import {
+  addToCarousel,
+  postToCarousel,
+} from "@/features/films/server/db/films";
 import {
   fetchPopular,
   fetchTrending,
@@ -68,7 +71,7 @@ const FeaturedFilms = ({
     mediaType: "movie" | "tv",
   ) => {
     if (category === "carousel") {
-      return await addToCarousel(filmId, mediaType);
+      return await postToCarousel(filmId, mediaType);
     } else {
       const { success, message } = await addFilmCategory(
         filmId,

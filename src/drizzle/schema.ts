@@ -1,6 +1,6 @@
 import { pgEnum, pgTable as table } from "drizzle-orm/pg-core";
 import * as t from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // Helpers
 const timestamps = {
@@ -9,6 +9,12 @@ const timestamps = {
 };
 export const userRoles = ["admin", "user"] as const;
 export type UserRole = (typeof userRoles)[number];
+
+const bytea = t.customType<{ data: Buffer; notNull: false; default: false }>({
+  dataType: () => "bytea",
+  toDriver: (value: Buffer) => sql`${value}::bytea`,
+  fromDriver: (value) => Buffer.from(value as ArrayBuffer),
+});
 
 // Enums
 export const contentTypeEnum = pgEnum("content_type", ["movie", "tv", "kids"]);
@@ -39,6 +45,28 @@ export const films = table(
     t.uniqueIndex("tmdb_idx").on(table.tmdbId),
     t.index("title_idx").on(table.title),
     t.index("content_type_idx").on(table.contentType),
+  ],
+);
+
+export const carouselFilms = table(
+  "carouselFilms",
+  {
+    id: t.integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    tmdbId: t.integer("tmdb_id").notNull().unique(),
+    title: t.varchar("title", { length: 255 }).notNull(),
+    overview: t.text("overview").notNull(),
+    contentType: contentTypeEnum("content_type").notNull(),
+    rating: t.integer("rating").notNull(),
+    seasons: t.integer("seasons"),
+    runtime: t.varchar("runtime"),
+    genres: t.jsonb("genres").notNull().$type<string[]>(),
+    backdropImage: bytea("backdrop_image_data").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    t.uniqueIndex("carousel_tmdb_idx").on(table.tmdbId),
+    t.index("caousel_title_idx").on(table.title),
+    t.index("carousel_content_type_idx").on(table.contentType),
   ],
 );
 

@@ -24,6 +24,7 @@ const ActorCard = (props: {
             alt={name}
             className="rounded-full object-cover"
             loading="lazy"
+            quality={65}
           />
         )}
       </div>

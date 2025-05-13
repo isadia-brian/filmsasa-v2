@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/drizzle";
-import { filmCategories, films } from "@/drizzle/schema";
+import { carouselFilms, filmCategories, films } from "@/drizzle/schema";
 import { eq, and, lte, gte, isNotNull, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
@@ -11,6 +11,29 @@ import { backdropURL } from "@/lib/utils";
 import { convertMinutes } from "@/lib/formatters";
 import { revalidatePath } from "next/cache";
 import { revalidateTag } from "next/cache";
+
+export const fetchCarouselAction = cache(async () => {
+  try {
+    const result = await db.query.carouselFilms.findMany();
+    const films = result;
+    const carouselData = films.map((film) => ({
+      tmdbId: film.tmdbId,
+      title: film.title,
+      genres: film.genres,
+      overview: film.overview,
+      seasons: film.seasons,
+      runtime: film.runtime,
+      rating: film.rating,
+      backdropImage: `/api/images/${film.tmdbId}`,
+      contentType: film.contentType,
+    }));
+
+    return carouselData;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+});
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(async (category: string) => {
@@ -220,6 +243,81 @@ export const fetchFilmGenres = cache(async () => {
     years: sortedYears,
   };
 });
+
+export const postToCarousel = async (
+  filmId: number,
+  mediaType: "movie" | "tv",
+) => {
+  try {
+    const movieDataReq = await fetch(
+      `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+    );
+    const {
+      title: movieTitle,
+      name: tvTitle,
+      overview,
+      backdrop_path,
+      runtime: movieRuntime,
+      number_of_seasons: seasons,
+      genres: genreObjects,
+      vote_average,
+    } = await movieDataReq.json();
+
+    const title = movieTitle || tvTitle;
+    let runtime: string | null = null;
+    if (!movieRuntime) {
+      runtime = null;
+    } else {
+      runtime = convertMinutes(movieRuntime);
+    }
+    const genres = genreObjects.map(({ name }: { name: string }) => name);
+    const rating = Math.round(vote_average);
+    // Helper function to sanitize titles for filenames
+    const response = await fetch(backdropURL(backdrop_path));
+    const arrayBuffer = await response.arrayBuffer();
+    const backdropBuffer = Buffer.from(arrayBuffer);
+
+    const carouselFilmData = {
+      tmdbId: filmId,
+      title,
+      contentType: mediaType,
+      runtime,
+      seasons,
+      overview,
+      backdropImage: backdropBuffer,
+      genres,
+      rating,
+    };
+
+    const [carouselFilm] = await db
+      .insert(carouselFilms)
+      .values(carouselFilmData)
+      .onConflictDoUpdate({
+        target: carouselFilms.tmdbId,
+        set: {
+          backdropImage: backdropBuffer,
+          rating: carouselFilmData.rating,
+          updated_at: new Date(),
+        },
+      })
+      .returning();
+
+    revalidatePath("/");
+    revalidatePath("/admin/carousel");
+    revalidateTag("carousel");
+
+    return {
+      success: true,
+      message: `Film ${carouselFilm.title} inserted successfully`,
+    };
+  } catch (error) {
+    console.error(`Error processing movie: `, error);
+    return {
+      success: false,
+      message: "An error occurred on the server",
+    };
+  }
+};
 
 export const addToCarousel = async (
   filmId: number,

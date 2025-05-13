@@ -45,6 +45,7 @@ const RecommendedCard = (props: {
               : `/placeholder.webp`
           }
           fill
+          quality={65}
           alt={title || name}
           className="rounded-lg object-cover"
           loading="lazy"

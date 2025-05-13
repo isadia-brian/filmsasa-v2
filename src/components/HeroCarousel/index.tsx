@@ -1,9 +1,10 @@
 import { Slider } from "./Slider";
 import { HeroMovieCard } from "./HeroMovieCard";
 import { carouselFilms } from "@/data/carousel";
+import { fetchCarouselAction } from "@/features/films/server/db/films";
 
 export const HeroCarousel = async () => {
-  const films = carouselFilms;
+  const films = await fetchCarouselAction();
 
   return (
     <Slider
