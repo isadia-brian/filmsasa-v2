@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchContent } from "@/features/tmdb/server/actions/films";
 import ActorCard from "../ActorCard";
 import dynamic from "next/dynamic";
+import SeasonEpisode from "./SeasonEpisode";
 
 const RecommendedCard = dynamic(() => import("./RecommendedCard"));
 const YoutubePlayer = dynamic(() => import("../YoutubePlayer"));
@@ -24,6 +25,7 @@ const TmdbContent = ({
   const [cast, setCast] = useState<any[]>([]);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [seasons, setSeasons] = useState<number | null>(null);
+  const [seriesData, setSeriesData] = useState<any[]>();
 
   const [videoId, setVideoId] = useState<string | null>(null);
 
@@ -36,24 +38,21 @@ const TmdbContent = ({
         trailerUrl: url,
         video_id,
         seasons,
+        seriesData: episodes,
       } = results;
       setCast(cast);
       setRecommendations(recommendations);
       setTrailerUrl(url);
       setVideoId(video_id);
       setSeasons(seasons);
+      setSeriesData(episodes);
     };
     fetchData();
   }, []);
+
   return (
     <div>
-      {seasons && (
-        <div className="flex items-center pt-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400">
-          {Array.from({ length: seasons }, (_, i) => (
-            <p key={i}>Season {i + 1}</p>
-          ))}
-        </div>
-      )}
+      {seasons && <SeasonEpisode seasons={seasons} seriesData={seriesData} />}
       <div className="text-white relative px-4  pt-10 pb-12 border-b-[0.5px] border-slate-400 ">
         <h5 className="text-[17px] font-bold mb-6">Cast</h5>
 

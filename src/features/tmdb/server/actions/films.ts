@@ -207,14 +207,58 @@ export const fetchContent = cache(
     );
     const film = await res.json();
 
-    const similar = film.similar.results;
+    const similar = film.recommendations.results;
 
-    const recommendations = similar.slice(0, 8);
+    const recommendations = similar.slice(0, 5);
 
     let seasons: number | null = null;
 
+    let seriesData = [];
     if (media_type === "tv") {
       seasons = film.number_of_seasons;
+      seasons = Number(seasons);
+      const urls = Array.from(
+        { length: seasons },
+        (_, i) =>
+          `https://api.themoviedb.org/3/tv/${tmdbId}/season/${i + 1}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+      );
+      try {
+        for (let i = 0; i < urls.length; i++) {
+          try {
+            console.log(`Fetching season ${i + 1} episodes`);
+            const response = await fetch(urls[i]);
+            if (!response.ok) {
+              console.log(
+                `Error fetching response: HTTP ${response.status} - ${response.statusText}`,
+              );
+            }
+            const { episodes } = await response.json();
+
+            if (episodes) {
+              const data = episodes.map(
+                ({
+                  episode_number,
+                  id,
+                  name,
+                  still_path,
+                  season_number,
+                }: {
+                  episode_number: number;
+                  id: number;
+                  name: string;
+                  still_path: string;
+                  season_number: number;
+                }) => ({ episode_number, id, name, still_path, season_number }),
+              );
+              seriesData.push(...data);
+            }
+          } catch (error) {
+            console.log(`An error occurred: ${error}`);
+          }
+        }
+      } catch (error) {
+        console.log(`An error occurred: ${error}`);
+      }
     } else {
       seasons = null;
     }
@@ -248,7 +292,7 @@ export const fetchContent = cache(
       video_id = trailer.key;
     }
 
-    return { recommendations, cast, trailerUrl, video_id, seasons };
+    return { recommendations, cast, trailerUrl, video_id, seasons, seriesData };
   },
 );
 
