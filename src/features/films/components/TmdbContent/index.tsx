@@ -23,22 +23,37 @@ const TmdbContent = ({
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [cast, setCast] = useState<any[]>([]);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
+  const [seasons, setSeasons] = useState<number | null>(null);
 
   const [videoId, setVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const results = await fetchContent(tmdbId, media);
-      const { recommendations, cast, trailerUrl: url, video_id } = results;
+      const {
+        recommendations,
+        cast,
+        trailerUrl: url,
+        video_id,
+        seasons,
+      } = results;
       setCast(cast);
       setRecommendations(recommendations);
       setTrailerUrl(url);
       setVideoId(video_id);
+      setSeasons(seasons);
     };
     fetchData();
   }, []);
   return (
     <div>
+      {seasons && (
+        <div className="flex items-center pt-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400">
+          {Array.from({ length: seasons }, (_, i) => (
+            <p key={i}>Season {i + 1}</p>
+          ))}
+        </div>
+      )}
       <div className="text-white relative px-4  pt-10 pb-12 border-b-[0.5px] border-slate-400 ">
         <h5 className="text-[17px] font-bold mb-6">Cast</h5>
 

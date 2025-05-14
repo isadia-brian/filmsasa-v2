@@ -200,16 +200,24 @@ export const fetchProvider = cache(
 export const fetchContent = cache(
   async (tmdbId: number, media_type: string) => {
     const res = await fetch(
-      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${process.env.TMDB_API_KEY}`,
+      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,similar,videos&api_key=${process.env.TMDB_API_KEY}`,
       {
         cache: "force-cache",
       },
     );
     const film = await res.json();
 
-    const similar = film.recommendations.results;
+    const similar = film.similar.results;
 
     const recommendations = similar.slice(0, 8);
+
+    let seasons: number | null = null;
+
+    if (media_type === "tv") {
+      seasons = film.number_of_seasons;
+    } else {
+      seasons = null;
+    }
 
     const credits = film.credits.cast;
     const actors = credits
@@ -240,7 +248,7 @@ export const fetchContent = cache(
       video_id = trailer.key;
     }
 
-    return { recommendations, cast, trailerUrl, video_id };
+    return { recommendations, cast, trailerUrl, video_id, seasons };
   },
 );
 
