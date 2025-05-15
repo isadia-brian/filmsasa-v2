@@ -52,7 +52,13 @@ const TmdbContent = ({
 
   return (
     <div>
-      {seasons && <SeasonEpisode seasons={seasons} seriesData={seriesData} />}
+      {seasons && (
+        <SeasonEpisode
+          seasons={seasons}
+          seriesData={seriesData}
+          tmdbId={tmdbId}
+        />
+      )}
       <div className="text-white relative px-4  pt-10 pb-12 border-b-[0.5px] border-slate-400 ">
         <h5 className="text-[17px] font-bold mb-6">Cast</h5>
 

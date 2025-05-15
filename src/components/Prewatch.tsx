@@ -103,7 +103,7 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
             <Link
               href={{
                 pathname: `/watch`,
-                query: { name: title, media: media_type, id: film?.tmdbId },
+                query: { media: media_type, id: film?.tmdbId },
               }}
               className="border-2 animate-pulse flex items-center justify-center border-red-500 rounded-full h-24 w-24"
             >

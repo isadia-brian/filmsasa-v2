@@ -7,6 +7,16 @@ const VideoPlayer = () => {
   const searchParams = useSearchParams();
   const videoId = searchParams.get("id");
   const media = searchParams.get("media");
+  const season = searchParams.get("season") || 1;
+  const episode = searchParams.get("episode") || 1;
+
+  let baseUrl: string = `https://vidsrc.xyz/embed/${media}`;
+
+  if (media == "movie") {
+    baseUrl = `${baseUrl}/${videoId}`;
+  } else {
+    baseUrl = `${baseUrl}/${videoId}/${season}-${episode}`;
+  }
 
   return (
     <div className="relative min-h-screen px-4 w-full flex justify-center items-center  md:py-24 bg-black/90">
@@ -15,7 +25,7 @@ const VideoPlayer = () => {
           className="w-full rounded-md h-full "
           allowFullScreen
           loading="lazy"
-          src={`https://vidsrc.xyz/embed/${media}/${videoId}?autoplay=1&muted=1`}
+          src={`${baseUrl}?autoplay=1&muted=1`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share fullscreen"
           referrerPolicy="strict-origin-when-cross-origin"
         ></iframe>

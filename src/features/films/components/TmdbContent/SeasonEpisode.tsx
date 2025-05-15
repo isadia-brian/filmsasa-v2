@@ -7,9 +7,11 @@ import { useState } from "react";
 const SeasonEpisode = ({
   seasons,
   seriesData,
+  tmdbId,
 }: {
   seasons: number;
   seriesData?: any[];
+  tmdbId: number;
 }) => {
   const [activeSeason, setActiveSeason] = useState<number>(1);
   const filteredEpisodes =
@@ -26,9 +28,7 @@ const SeasonEpisode = ({
               key={i}
               onClick={() => setActiveSeason(seasonNumber)}
               className={`pb-2 ${
-                activeSeason === seasonNumber
-                  ? "border-b-2 border-blue-500"
-                  : ""
+                activeSeason === seasonNumber ? "border-b-2 border-red-500" : ""
               }`}
             >
               Season {seasonNumber}
@@ -40,8 +40,19 @@ const SeasonEpisode = ({
       <div>
         <ul className="flex items-center space-x-3 lg:space-x-5 overflow-x-scroll no-scrollbar">
           {filteredEpisodes?.map((episode) => (
-            <li key={episode.id}>
-              <Link href={"#"} className="space-y-1">
+            <li key={episode.id} className="cursor-pointer">
+              <Link
+                href={{
+                  pathname: "/watch",
+                  query: {
+                    media: "tv",
+                    id: tmdbId,
+                    season: activeSeason,
+                    episode: episode.episode_number,
+                  },
+                }}
+                className="space-y-1.5"
+              >
                 <div className="relative h-[110px] w-[200px] md:w-[260px] md:h-[150px] rounded-lg bg-white hover:cursor-default">
                   <ImageWithSkeleton
                     src={
@@ -55,7 +66,10 @@ const SeasonEpisode = ({
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{episode.name}</p>
+                  <p className="text-xs font-light">
+                    Episode: {episode.episode_number}
+                  </p>
+                  <p className="text-xs">{episode.name}</p>
                 </div>
               </Link>
             </li>
