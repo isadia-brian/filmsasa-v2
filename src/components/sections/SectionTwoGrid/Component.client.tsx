@@ -60,7 +60,7 @@ const ContentSection: React.FC<PropType> = (props) => {
   };
 
   return (
-    <div className="relative w-full text-white mb-5 md:mb-0">
+    <div className="relative w-full text-white mb-5 md:mb-8">
       <div className="flex w-full border-b-[0.5px] border-white/20">
         <div className="flex items-center w-full justify-between md:mb-0 px-4 h-[80px] md:h-[50px]">
           {headerButtons.map(({ title, icon }, index) => (

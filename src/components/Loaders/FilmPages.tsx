@@ -7,7 +7,7 @@ const FilmPagesLoader = () => {
             key={index}
             className=" min-w-[100px] flex flex-col gap-2 lg:col-span-2 "
           >
-            <div className="relative h-[160px]  md:h-[240px] animate-pulse bg-slate-400 lg:h-[280px] rounded-md" />
+            <div className="relative h-[160px]  md:h-[240px] animate-pulse bg-neutral-700 lg:h-[280px] rounded-md" />
             <div className="animate-pulse bg-slate-400 h-4 w-10 rounded-md " />
           </li>
         ))}

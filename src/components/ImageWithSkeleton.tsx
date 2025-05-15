@@ -9,7 +9,7 @@ const ImageWithSkeleton: React.FC<ImageProps> = (props) => {
   return (
     <>
       {isLoading && (
-        <div className="absolute inset-0 bg-stone-200 animate-pulse rounded h-full w-full" />
+        <div className="absolute inset-0 bg-neutral-700 animate-pulse rounded h-full w-full" />
       )}
       <Image
         {...props}
