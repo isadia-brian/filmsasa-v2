@@ -22,6 +22,7 @@ export type TMDBFilm = {
 
 export interface FilmCardProps {
   section?: boolean;
+  content?: boolean;
   page?: string;
   film: {
     tmdbId: number;

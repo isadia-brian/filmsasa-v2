@@ -3,7 +3,7 @@
 import { Dispatch, SetStateAction, useActionState } from "react";
 import { modalSignUp } from "@/features/auth/server/actions";
 import { XCircleIcon } from "lucide-react";
-import OauthButtons from "./OauthButtons";
+import OauthButton from "./OauthButton";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -125,7 +125,7 @@ const SignUpForm = ({ toggleAuth, setActiveTab }: FormActions) => {
         <p className="text-xs leading-0 text-center text-gray-400">
           Or sign up with
         </p>
-        <OauthButtons />
+        <OauthButton />
       </div>
     </div>
   );

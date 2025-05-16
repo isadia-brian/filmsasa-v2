@@ -36,7 +36,7 @@ const ContentSection: React.FC<PropType> = (props) => {
   const [data] = useState<FilmCardProps["film"][]>(filmData);
 
   const { width } = useWindowSize();
-  const filmsToShow = width < 768 ? 3 : width < 1024 ? 4 : 6;
+  const filmsToShow = width < 500 ? 3 : width < 1024 ? 4 : 6;
 
   // The filter value controlled by the buttons
   const [filter, setFilter] = useState<string>("Movies");
@@ -98,7 +98,7 @@ const ContentSection: React.FC<PropType> = (props) => {
         </Link>
       </div>
 
-      <div className="gap-2 w-full grid grid-cols-3 px-4 h-full pt-4 pb-10 md:pt-6 overflow-x-scroll no-scrollbar md:gap-x-[12px] gap-y-10 lg:grid-cols-6">
+      <div className="gap-2 w-full grid grid-cols-3 px-4 h-full pt-4 pb-10 md:pt-6 overflow-x-scroll no-scrollbar md:gap-x-[12px] gap-y-10 sm:grid-cols-4 lg:grid-cols-6">
         {filteredData
           ?.slice(0, filmsToShow)
           .map((film, index) => <FilmCard film={film} key={index} />)}

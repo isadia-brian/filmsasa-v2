@@ -54,12 +54,12 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
 
   return (
     <div
-      className={`relative ${
+      className={`relative w-full ${
         trailerOpen ? "h-screen overflow-hidden " : "min-h-screen overflow-auto"
       }`}
     >
       <div
-        className={`relative flex flex-col justify-center ${kidsPage ? "h-[100vh]" : "h-[50vh] md:h-[90vh]"}`}
+        className={`relative w-full flex flex-col justify-center ${kidsPage ? "h-[100vh]" : "h-[60vh] md:h-[80vh]"}`}
       >
         <div className="relative h-full w-full">
           <Image
@@ -74,45 +74,32 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
         "
           />
         </div>
-        <div className="absolute h-full w-full left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white grid grid-cols-3">
-          <div className="  h-full px-4 pt-[150px] pb-[100px] flex flex-col justify-between">
-            <h4 className={`${aquire.className} text-7xl max-w-[500px]`}>
+        <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
+          <div className="w-full">
+            <h4
+              className={`${aquire.className} text-4xl md:text-7xl max-w-[250px] md:max-w-[500px]`}
+            >
               {title}
             </h4>
-            <div className="flex gap-2 items-center">
-              <button
-                type="button"
-                onClick={toggleYoutube}
-                className=" bg-red-500 py-2 w-[140px] uppercase cursor-pointer border border-red-500 text-sm"
-              >
-                Watch Trailer
-              </button>
-              <button
-                type="button"
-                onClick={toggleYoutube}
-                className=" flex items-center justify-center gap-2 py-2 w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm"
-              >
-                <span>
-                  <PlusIcon className="h-4 w-4" />
-                </span>
-                WatchList
-              </button>
-            </div>
           </div>
-          <div className="h-full flex items-center justify-center">
+
+          <div className="flex items-center justify-center md:mt-[60px] md:w-fit md:mx-auto">
             <Link
               href={{
                 pathname: `/watch`,
                 query: { media: media_type, id: film?.tmdbId },
               }}
-              className="border-2 animate-pulse flex items-center justify-center border-red-500 rounded-full h-24 w-24"
+              className="border-2 animate-pulse flex items-center justify-center border-red-500 rounded-full h-14 w-14 md:h-24 md:w-24"
             >
-              <PlayIcon className="text-white-500 h-7 w-7" fill="white" />
+              <PlayIcon
+                className="text-white-500 h-5 w-5 md:h-7 md:w-7"
+                fill="white"
+              />
             </Link>
           </div>
-          <div className="flex flex-col justify-end pb-[100px] h-full">
-            <div className="flex flex-col gap-2 pr-2">
-              <div className="text-sm flex items-center gap-2">
+          <div className="w-full md:w-fit md:absolute md:bottom-[40px] md:right-4">
+            <div className="flex flex-col gap-2 pr-2 ">
+              <div className="text-xs md:text-sm flex items-center gap-2">
                 <p>{year}</p>
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
                 <div>
@@ -140,10 +127,29 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
                   ))}
                 </div>
               </div>
-              <p className="text-[15px] max-w-[500px] leading-tight line-clamp-6">
+              <p className="max-w-[500px] leading-tight line-clamp-6">
                 {overview}
               </p>
             </div>
+          </div>
+          <div className="flex gap-2 items-center md:items-end md:absolute md:bottom-0 md:pb-[90px]">
+            <button
+              type="button"
+              onClick={toggleYoutube}
+              className=" bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm"
+            >
+              Watch Trailer
+            </button>
+            <button
+              type="button"
+              onClick={toggleYoutube}
+              className=" flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm"
+            >
+              <span>
+                <PlusIcon className="h-4 w-4" />
+              </span>
+              WatchList
+            </button>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { modalSignIn } from "@/features/auth/server/actions";
 import { XCircleIcon } from "lucide-react";
-import OauthButtons from "./OauthButtons";
+import OauthButton from "./OauthButton";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -101,7 +101,7 @@ const SignInForm = ({ toggleAuth }: { toggleAuth: () => void }) => {
         <p className="text-xs leading-0 text-center text-gray-400">
           Or sign in with
         </p>
-        <OauthButtons />
+        <OauthButton />
       </div>
     </div>
   );

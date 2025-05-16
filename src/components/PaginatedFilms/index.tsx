@@ -18,7 +18,7 @@ const PaginatedFilms = ({
 }) => {
   return (
     <div className="text-white w-full min-h-[70vh] relative" id="top">
-      <ul className="pt-4 md:pt-6 pb-10 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-12 gap-x-[10px] md:gap-x-[16px] gap-y-10 lg:gap-x-[10px] md:mb-4">
+      <ul className="pt-4 md:pt-6 pb-10 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full gap-x-[10px] md:gap-x-[16px] gap-y-10 lg:gap-x-[10px] md:mb-4">
         {allFilms?.map((item: Film, index: number) => {
           let link: string = "";
           const categoryTitle = item?.contentType?.toLowerCase();
@@ -41,7 +41,7 @@ const PaginatedFilms = ({
           return (
             <li
               key={index}
-              className="transition ease-in-out min-w-[100px] flex flex-col gap-2 lg:col-span-2 cursor-pointer md:hover:-translate-y-5 "
+              className="transition ease-in-out flex flex-col gap-2 cursor-pointer md:hover:-translate-y-5 "
             >
               <Link
                 prefetch={true}
@@ -49,7 +49,7 @@ const PaginatedFilms = ({
                 className="relative flex flex-col space-y-3"
               >
                 <div
-                  className="relative h-[160px]  md:h-[240px]   lg:h-[280px]  rounded-lg hover:rounded-md"
+                  className="relative h-[160px]  md:h-[240px]   lg:h-[290px]  rounded-lg hover:rounded-md"
                   id="link"
                 >
                   <ImageWithSkeleton

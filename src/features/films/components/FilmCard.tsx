@@ -4,7 +4,7 @@ import { getCardLink, posterURL } from "@/lib/utils";
 import { FilmCardProps } from "@/types/films";
 
 const FilmCard: React.FC<FilmCardProps> = (props) => {
-  const { film, section } = props;
+  const { film, section, content } = props;
 
   const title = film.title;
   const image = film.posterImage;
