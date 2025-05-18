@@ -1,8 +1,8 @@
 import PageTitle from "@/components/PageTitle";
 import PaginatedFilms from "@/components/PaginatedFilms";
-import { fetchKids } from "@/features/films/server/db/films";
 import { Suspense } from "react";
 import FilmPagesLoader from "@/components/Loaders/FilmPages";
+import { fetchFilms } from "@/features/tmdb/server/actions/films";
 
 const Kids = async (props: {
   searchParams?: Promise<{ query?: string; page?: string }>;
@@ -11,7 +11,26 @@ const Kids = async (props: {
   const currentPage = Number(searchParams?.page) || 1;
   const pageSize = 24;
 
-  let { data: kids, totalCount } = await fetchKids(currentPage, pageSize);
+  let { allFilms: kids, totalCount } = await fetchFilms("kids");
+
+  let films = kids
+    .map((film) => {
+      return {
+        title: film.title,
+        poster_path: film.poster_path,
+        id: film.id,
+        year: parseInt(film.release_date.split("-")[0]),
+        vote_average: film.vote_average,
+      };
+    })
+    .filter((film) => film.year < 2026);
+
+  films.sort((a, b) => b.year - a.year);
+
+  const firstItemIndex = (currentPage - 1) * pageSize;
+  const lastItemIndex = firstItemIndex + pageSize;
+  const currentFilms = films?.slice(firstItemIndex, lastItemIndex);
+
   const query = searchParams?.query || "";
 
   if (query) {
@@ -27,9 +46,10 @@ const Kids = async (props: {
 
       <Suspense fallback={<FilmPagesLoader />}>
         <PaginatedFilms
-          allFilms={kids}
+          allFilms={currentFilms}
           totalCount={totalCount}
           currentPage={currentPage}
+          media_type="kids"
           pageSize={pageSize}
         />
       </Suspense>

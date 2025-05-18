@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { AlignJustify, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-
+import { navLinks } from "./Links";
 import Link from "next/link";
 import UserAvatar from "../UserAvatar";
 import dynamic from "next/dynamic";
@@ -11,24 +11,6 @@ import { User } from "@/types";
 import FilmsSearchModal from "../FilmsSearchModal";
 
 const ProfileCard = dynamic(() => import("../ProfileCard"));
-const navLinks = [
-  {
-    title: "Home",
-    link: "/",
-  },
-  {
-    title: "Movies",
-    link: "/movies",
-  },
-  {
-    title: "Series",
-    link: "/series",
-  },
-  {
-    title: "Kids",
-    link: "/kids",
-  },
-];
 
 const menuVars = {
   initial: {
@@ -172,7 +154,7 @@ const NavbarClient = ({ user }: { user: User }) => {
               }`}
             >
               <button
-                className="flex lg:hidden bg-white/40 rounded h-8 w-8 items-center justify-center"
+                className="flex lg:hidden h-8 w-8 items-center justify-center"
                 onClick={toggleMenu}
                 aria-expanded={open}
                 aria-controls="mobile-menu"

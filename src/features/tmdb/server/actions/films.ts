@@ -7,6 +7,51 @@ import { convertMinutes } from "@/lib/formatters";
 
 const baseUrl: string = `https://api.themoviedb.org/3`;
 
+export const searchFilmByName = async (
+  media_type: "movie" | "tv",
+  query: string,
+) => {
+  const response = await fetch(
+    `https://api.themoviedb.org/3/search/${media_type}?query=${encodeURIComponent(
+      query,
+    )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+  );
+
+  const { results } = await response.json();
+  return results
+    .map(
+      ({
+        id,
+        poster_path,
+        title,
+        name,
+        vote_average,
+        profile_path,
+        release_date,
+        first_air_date,
+      }: {
+        id: string;
+        poster_path: string;
+        name: string;
+        profile_path: string;
+        title: string;
+        vote_average: string;
+        release_date: string;
+        first_air_date: string;
+      }) => ({
+        id,
+        poster_path,
+        title,
+        name,
+        profile_path,
+        vote_average,
+        release_date,
+        first_air_date,
+      }),
+    )
+    .filter(({ vote_average }: { vote_average: number }) => vote_average > 0);
+};
+
 export async function searchContent(query: string) {
   const response = await fetch(
     `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(
@@ -154,6 +199,54 @@ export const fetchPopular = cache(
   },
 );
 
+export const fetchFilms = cache(
+  unstable_cache(
+    async (media_type: string) => {
+      let allFilms = [];
+      let discoverUrl = "";
+      if (media_type === "movie") {
+        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&vote_average.gte=4&with_origin_country=US&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${process.env.TMDB_API_KEY}&page=`;
+      } else if (media_type === "tv") {
+        discoverUrl = `${baseUrl}/discover/tv?include_adult=false&include_video=false&language=en-US&watch_region=US&first_air_date.gte=2020-01-01&sort_by=popularity.desc&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${process.env.TMDB_API_KEY}&page=`;
+      } else {
+        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${process.env.TMDB_API_KEY}&page=`;
+      }
+      const urls = Array.from(
+        { length: 20 },
+        (_, i) => `${discoverUrl}${i + 1}`,
+      );
+
+      try {
+        const pages = await Promise.all(
+          urls.map((url) =>
+            fetch(url, { next: { tags: ["tmdb-data"] } })
+              .then((res) => res.json())
+              .catch((error) => {
+                console.error("Fetch error:", error);
+                return { results: [] };
+              }),
+          ),
+        );
+
+        allFilms = pages.flatMap((page) => page.results);
+
+        return {
+          allFilms,
+          totalCount: allFilms.length,
+        };
+      } catch (error) {
+        console.error("Global error:", error);
+        return { allFilms: [], totalCount: 0 };
+      }
+    },
+    ["tmdb-provider-data"],
+    {
+      tags: ["tmdb-data"],
+      revalidate: 3600,
+    },
+  ),
+);
+
 export const fetchProvider = cache(
   unstable_cache(
     async (media_type: string, watch_provider: string) => {
@@ -179,7 +272,6 @@ export const fetchProvider = cache(
 
         allFilms = pages.flatMap((page) => page.results);
 
-        console.log(`Fetched ${allFilms.length} ${media_type} films`);
         return {
           allFilms,
           totalCount: allFilms.length,
@@ -225,7 +317,6 @@ export const fetchContent = cache(
       try {
         for (let i = 0; i < urls.length; i++) {
           try {
-            console.log(`Fetching season ${i + 1} episodes`);
             const response = await fetch(urls[i]);
             if (!response.ok) {
               console.log(

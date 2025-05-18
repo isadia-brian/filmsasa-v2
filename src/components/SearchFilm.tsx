@@ -8,14 +8,16 @@ const SearchFilm = ({ placeholder }: { placeholder: string }) => {
   const { replace } = useRouter();
 
   const handleSearch = useDebouncedCallback((term) => {
+    const searchTerm = term;
     const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set("query", term);
+    if (searchTerm) {
+      params.delete("page");
+      params.set("query", searchTerm);
     } else {
       params.delete("query");
     }
     replace(`${pathname}?${params.toString()}`);
-  }, 1000);
+  }, 500);
 
   return (
     <div className="relative rounded flex bg-white h-11 items-center w-full md:w-[250px]">

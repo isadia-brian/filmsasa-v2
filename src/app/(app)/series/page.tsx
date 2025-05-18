@@ -1,23 +1,32 @@
 import Filter from "@/components/Filter";
 import PageTitle from "@/components/PageTitle";
 import PaginatedFilms from "@/components/PaginatedFilms";
-import { fetchSeries } from "@/features/films/server/db/films";
 import { Suspense } from "react";
 import FilmPagesLoader from "@/components/Loaders/FilmPages";
+import {
+  fetchFilms,
+  searchFilmByName,
+} from "@/features/tmdb/server/actions/films";
 
 const Series = async (props: {
   searchParams?: Promise<{ query?: string; page?: string }>;
 }) => {
   const searchParams = await props.searchParams;
-  const currentPage = Number(searchParams?.page) || 1;
-  const pageSize = 24;
-  let { data: series, totalCount } = await fetchSeries(currentPage, pageSize);
+  let currentPage = Number(searchParams?.page) || 1;
+  let pageSize = 24;
+
+  let { allFilms: series, totalCount } = await fetchFilms("tv");
+
+  const firstItemIndex = (currentPage - 1) * pageSize;
+  const lastItemIndex = firstItemIndex + pageSize;
+  let currentFilms = series?.slice(firstItemIndex, lastItemIndex);
+
   const query = searchParams?.query || "";
 
   if (query) {
-    series = series.filter((item) =>
-      item.title.toLowerCase().includes(query.toLowerCase()),
-    );
+    const data = await searchFilmByName("tv", query.toLowerCase());
+    currentFilms = data;
+    pageSize = 0;
     totalCount = series.length;
   }
 
@@ -27,10 +36,11 @@ const Series = async (props: {
       <Filter filmType="series" />
       <Suspense fallback={<FilmPagesLoader />}>
         <PaginatedFilms
-          allFilms={series}
+          allFilms={currentFilms}
           totalCount={totalCount}
           currentPage={currentPage}
           pageSize={pageSize}
+          media_type="tv"
         />
       </Suspense>
     </div>
