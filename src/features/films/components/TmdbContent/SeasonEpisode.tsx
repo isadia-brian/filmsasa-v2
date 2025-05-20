@@ -19,7 +19,7 @@ const SeasonEpisode = ({
     [];
 
   return (
-    <div className="flex flex-col py-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400">
+    <div className="flex flex-col py-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400 overflow-x-scroll w-full">
       <div className=" flex items-center gap-4">
         {Array.from({ length: seasons }, (_, i) => {
           const seasonNumber = i + 1;
@@ -27,18 +27,18 @@ const SeasonEpisode = ({
             <button
               key={i}
               onClick={() => setActiveSeason(seasonNumber)}
-              className={`pb-2 ${
+              className={`pb-2 text-sm  min-w-fit ${
                 activeSeason === seasonNumber ? "border-b-2 border-red-500" : ""
               }`}
             >
-              Season {seasonNumber}
+              <span className=" inline-block">Season {seasonNumber}</span>
             </button>
           );
         })}
       </div>
 
-      <div>
-        <ul className="flex items-center space-x-3 lg:space-x-5 overflow-x-scroll no-scrollbar">
+      <div className="w-full">
+        <ul className="flex items-center space-x-3 lg:space-x-5">
           {filteredEpisodes?.map((episode) => (
             <li key={episode.id} className="cursor-pointer">
               <Link

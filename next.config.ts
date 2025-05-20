@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
       "use-debounce",
       "pg",
       "postgres",
+      "motion",
+      "next-themes",
+      "unique-username-generator",
+      "jose",
+      "bcryptjs",
+      "lucide-react",
+      "dotenv",
     ],
   },
 };
