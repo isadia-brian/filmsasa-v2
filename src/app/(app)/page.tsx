@@ -1,5 +1,5 @@
 import { HeroCarousel } from "@/components/HeroCarousel";
-import CategoryGrid from "@/components/sections/SectionTwoGrid";
+//import CategoryGrid from "@/components/sections/SectionTwoGrid";
 import NetworkProviders from "@/components/sections/NetworkProviders";
 import { Suspense } from "react";
 import SectionFilter from "@/components/sections/SectionOneGrid";
@@ -13,7 +13,7 @@ export default async function Home() {
         <Suspense>
           <SectionFilter />
         </Suspense>
-        <CategoryGrid />
+        {/*<CategoryGrid />*/}
       </main>
     </div>
   );

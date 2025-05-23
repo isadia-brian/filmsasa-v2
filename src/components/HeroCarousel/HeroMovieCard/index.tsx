@@ -9,10 +9,9 @@ import { memo, useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AddToFavorites } from "@/features/users/server/db";
 import { useToast } from "@/hooks/use-toast";
-import { CarouselFilm } from "@/types/films";
 
 type Proptype = {
-  film: CarouselFilm;
+  film: any;
   priorityLoad?: boolean;
 };
 
@@ -90,12 +89,12 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
           <div className={`mt-3 md:mt-0`}>
             <div className="py-2 md:max-w-[600px] mb-3 md:mb-4">
               <ul className="flex items-center gap-1 mb-3 divide-x">
-                {genres?.slice(0, 3).map(({ name }, index: number) => (
+                {genres?.slice(0, 3).map((genre: string, index: number) => (
                   <li
                     key={index}
-                    className="uppercase flex text-xs px-2 first:pl-0 leading-none text-stone-100 font-medium"
+                    className="uppercase flex text-[13px] px-2 first:pl-0 leading-none text-stone-100 font-medium"
                   >
-                    {name}
+                    {genre}
                   </li>
                 ))}
               </ul>

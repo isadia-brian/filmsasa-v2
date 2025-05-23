@@ -23,10 +23,10 @@ const FilmCard: React.FC<FilmCardProps> = (props) => {
         className={`relative h-[160px] w-full md:h-[280px] rounded-[var(--card-radius)] `}
       >
         <ImageWithSkeleton
-          src={
-            typeof image === "string" ? posterURL(image) : "/placeholder.webp"
-          }
+          src={image}
           fill
+          placeholder="blur"
+          blurDataURL={image}
           sizes="(max-width:768px) 110px, 342px"
           alt={typeof title === "string" ? title : ""}
           className="object-cover rounded-[var(--card-radius)] object-center"

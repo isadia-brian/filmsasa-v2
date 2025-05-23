@@ -2,18 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  addToCarousel,
-  postToCarousel,
-} from "@/features/films/server/db/films";
-import {
   fetchPopular,
   fetchTrending,
 } from "@/features/tmdb/server/actions/films";
 import { posterURL } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
-import { addFilmCategory } from "../../actions/tmdb";
 import { useToast } from "@/hooks/use-toast";
+import { insertFilmFromTmdb } from "@/features/films/server/db/films";
 
 type Film = {
   poster_path: string;
@@ -70,31 +66,19 @@ const FeaturedFilms = ({
     filmId: number,
     mediaType: "movie" | "tv",
   ) => {
-    if (category === "carousel") {
-      return await postToCarousel(filmId, mediaType);
+    const result = await insertFilmFromTmdb(filmId, category, mediaType);
+
+    if (result.action === "none") {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: result.message,
+      });
     } else {
-      const { success, message } = await addFilmCategory(
-        filmId,
-        mediaType,
-        category,
-      );
-
-      console.log(success, message);
-
-      if (success) {
-        console.log("Yes success = true");
-        toast({
-          title: "Success",
-          description: message,
-        });
-      } else {
-        console.log("No success = false");
-        toast({
-          title: "Error",
-          variant: "destructive",
-          description: message,
-        });
-      }
+      toast({
+        title: "Success",
+        description: result.message,
+      });
     }
   };
 

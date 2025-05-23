@@ -14,9 +14,8 @@ import {
 import dynamic from "next/dynamic";
 import { type Film } from "@/drizzle/schema";
 import FilmCard from "@/features/films/components/FilmCard";
-import { getUserLists } from "@/features/users/server/db";
 import { User } from "@/types";
-import { FilmCardProps } from "@/types/films";
+import { fetchUserData } from "@/features/films/server/db/films";
 
 const AuthModal = dynamic(
   () => import("../../../features/auth/components/AuthModal"),
@@ -42,16 +41,16 @@ const headerButtons = [
 ];
 
 interface FilmType {
-  posterImage: FilmCardProps["film"]["posterImage"];
-  title: FilmCardProps["film"]["title"];
-  contentType: FilmCardProps["film"]["contentType"];
-  tmdbId: FilmCardProps["film"]["tmdbId"];
+  posterImage?: string | null | undefined;
+  title?: string | undefined;
+  contentType?: "movie" | "tv" | undefined;
+  tmdbId?: number | undefined;
   filmCategories?: Film["filmCategories"];
   filterCategory?: string;
 }
 
 const useFilter = (
-  data: FilmType[],
+  data: any,
   filter: string,
   favourites: any,
   watchList: any,
@@ -63,27 +62,31 @@ const useFilter = (
 
     switch (filter) {
       case "Trending":
-        const trendingItems = data?.filter((film) => {
-          const features = film?.filmCategories?.map((t) => t.category);
+        const trendingItems = data?.filter((film: any) => {
+          const features = film?.filmCategories?.map(
+            (t: { category: string }) => t.category,
+          );
 
           const categories = Array.from(new Set(features?.flat()));
 
           return categories.includes("trending");
         });
 
-        const trending = trendingItems ?? [];
+        const trending = trendingItems;
 
         setFilteredData(trending);
         break;
       case "Popular":
-        const popularItems = data?.filter((film) => {
-          const features = film?.filmCategories?.map((t) => t.category);
+        const popularItems = data?.filter((film: any) => {
+          const features = film?.filmCategories?.map(
+            (t: { category: string }) => t.category,
+          );
 
           const categories = Array.from(new Set(features?.flat()));
 
           return categories.includes("popular");
         });
-        const popular = popularItems ?? [];
+        const popular = popularItems;
         setFilteredData(popular);
         break;
       case "Favourites":
@@ -119,8 +122,9 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
   };
 
   const getUserFavouriteList = async (userId: number) => {
-    const allFavourites = await getUserLists(userId);
-    const userFavouriteList = allFavourites?.userFavorites || [];
+    const data = await fetchUserData(userId);
+    const favorites = data?.favorites;
+    const userFavouriteList = favorites;
     return userFavouriteList;
   };
 
@@ -138,12 +142,12 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
       let favourited = null;
       const userFilms = await getUserFavouriteList(user?.id);
       if (userFilms && userFilms.length > 0) {
-        favourited = userFilms.map(({ film }) => {
+        favourited = userFilms.map((film) => {
           if (film !== null)
             return {
               title: film.title,
               tmdbId: film.tmdbId,
-              contentType: film.contentType,
+              contentType: film.mediaType,
               posterImage: film.posterImage,
             };
         });
@@ -258,7 +262,7 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
         className="relative lg:min-h-[360px] flex gap-[10px] px-4 pt-5 w-full  overflow-x-scroll no-scrollbar"
       >
         {filteredData?.length >= 1 ? (
-          filteredData.map((film, index) => {
+          filteredData.map((film: any, index: number) => {
             return <FilmCard film={film} key={index} section={true} />;
           })
         ) : (

@@ -1,4 +1,7 @@
+import { Film } from "@/drizzle/schema";
 import { clsx, type ClassValue } from "clsx";
+import { Film } from "lucide-react";
+import { cache } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -6,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function posterURL(poster_path: string | null) {
-  return `https://image.tmdb.org/t/p/w600_and_h900_bestv2${poster_path}`;
+  return `https://image.tmdb.org/t/p/w500${poster_path}`;
 }
 export function smallPosterURL(poster_path: string | null) {
   return `https://image.tmdb.org/t/p/w185${poster_path}`;
@@ -79,3 +82,23 @@ export const getCardLink = (
   }
   return cardLink;
 };
+
+// image-utils.ts
+export function bufferToDataURL(
+  buffer: Uint8Array,
+  type = "image/jpeg",
+): string {
+  const base64 = Buffer.from(buffer).toString("base64");
+  return `data:${type};base64,${base64}`;
+}
+
+export const convertFilms = cache((films: Film[]) => {
+  const filmsWithDataUrl = films.map((film) => ({
+    ...film,
+    backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
+    posterImage: bufferToDataURL(film.posterImage as Uint8Array),
+    genres: JSON.parse(film.genres) as string[],
+  }));
+
+  return filmsWithDataUrl;
+});

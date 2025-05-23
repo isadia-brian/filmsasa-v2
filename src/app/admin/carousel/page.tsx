@@ -2,10 +2,11 @@ import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
-import { carouselFilms } from "@/data/carousel";
+//import { carouselFilms } from "@/data/carousel";
 import Image from "next/image";
 import DeleteBtn from "../_components/FeaturedFilms/DeleteBtn";
-import { fetchCarouselAction } from "@/features/films/server/db/films";
+import { fetchCarouselFilms } from "@/features/films/server/db/films";
+import { bufferToDataURL } from "@/lib/utils";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -15,7 +16,13 @@ export default async function Page(props: {
   //const searchParams = await props.searchParams;
   //const query = searchParams?.query ?? "";
 
-  const films = await fetchCarouselAction();
+  const { films } = await fetchCarouselFilms();
+
+  const filmsWithDataUrls = films?.map((film) => ({
+    ...film,
+    backdropImage: bufferToDataURL(film.backdropImage),
+    posterImage: bufferToDataURL(film.posterImage),
+  }));
 
   return (
     <SidebarInset>
@@ -28,7 +35,7 @@ export default async function Page(props: {
             </Modal>
           </div>
           <ul className="grid md:grid-cols-6 gap-2 relative">
-            {films?.map((film, index) => (
+            {filmsWithDataUrls?.map((film, index) => (
               <li
                 key={index}
                 className="relative flex flex-col items-start gap-0.5"
@@ -39,6 +46,8 @@ export default async function Page(props: {
                     fill
                     className="object-cover rounded"
                     alt={film.title}
+                    placeholder="blur"
+                    blurDataURL={film.backdropImage}
                   />
                   <DeleteBtn tmdbId={film.tmdbId} />
                 </div>

@@ -6,7 +6,7 @@ import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
 import Image from "next/image";
-import { posterURL } from "@/lib/utils";
+import { bufferToDataURL } from "@/lib/utils";
 
 const page = async (props: {
   searchParams?: Promise<{
@@ -16,8 +16,15 @@ const page = async (props: {
   const searchParams = await props.searchParams;
   const query = searchParams?.query;
 
-  const data = await fetchTrending();
-  let trendingFilm = data || [];
+  const { films } = await fetchTrending();
+
+  const filmsWithDataUrls = films?.map((film) => ({
+    ...film,
+    backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
+    posterImage: bufferToDataURL(film.posterImage as Uint8Array),
+  }));
+
+  let trendingFilm = filmsWithDataUrls || [];
 
   if (query) {
     trendingFilm = trendingFilm.filter((film) =>
@@ -44,12 +51,10 @@ const page = async (props: {
                 >
                   <div className=" h-[260px] w-full relative rounded">
                     <Image
-                      src={
-                        typeof film.posterImage === "string"
-                          ? posterURL(film.posterImage)
-                          : "/placeholder.webp"
-                      }
+                      src={film.posterImage || "/placeholder.webp"}
                       fill
+                      placeholder="blur"
+                      blurDataURL={film.posterImage}
                       className="object-cover rounded"
                       alt={film.title}
                     />

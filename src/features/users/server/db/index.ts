@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/drizzle";
-import { userFavorites, users } from "@/drizzle/schema";
+import { userFilms, users } from "@/drizzle/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -19,11 +19,8 @@ export const AddToFavorites = async (
         message: "Please sign in to add to favorites",
       };
     }
-    const existingFavorite = await db.query.userFavorites.findFirst({
-      where: and(
-        eq(userFavorites.userId, user.id),
-        eq(userFavorites.filmTmdbId, filmId),
-      ),
+    const existingFavorite = await db.query.userFilms.findFirst({
+      where: and(eq(userFilms.userId, user.id), eq(userFilms.isFavorite, true)),
     });
     if (existingFavorite) {
       return {
@@ -32,8 +29,8 @@ export const AddToFavorites = async (
       };
     }
     //Does not exist
-    await db.insert(userFavorites).values({
-      filmTmdbId: filmId,
+    await db.insert(userFilms).values({
+      tmdbId: filmId,
       userId: user.id,
     });
     revalidatePath(path);
@@ -69,13 +66,8 @@ export const RemoveFavorite = async (
       };
     }
     await db
-      .delete(userFavorites)
-      .where(
-        and(
-          eq(userFavorites.userId, userId),
-          eq(userFavorites.filmTmdbId, filmId),
-        ),
-      );
+      .delete(userFilms)
+      .where(and(eq(userFilms.userId, userId), eq(userFilms.tmdbId, filmId)));
 
     revalidatePath(path);
     return {
@@ -93,24 +85,5 @@ export const RemoveFavorite = async (
 const getUser = async (userId: number) => {
   return await db.query.users.findFirst({
     where: eq(users.id, userId),
-  });
-};
-
-export const getUserLists = async (userId: number) => {
-  return await db.query.users.findFirst({
-    columns: { id: true },
-    where: eq(users.id, userId),
-    with: {
-      userFavorites: {
-        with: {
-          film: true,
-        },
-      },
-      userWatchlist: {
-        with: {
-          film: true,
-        },
-      },
-    },
   });
 };

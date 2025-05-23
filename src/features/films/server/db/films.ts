@@ -1,65 +1,105 @@
 "use server";
 
 import { db } from "@/drizzle";
-import { carouselFilms, filmCategories, films } from "@/drizzle/schema";
-import { eq, and, lte, gte, isNotNull, sql } from "drizzle-orm";
+import {
+  filmCategories,
+  films,
+  InsertFilm,
+  userFilms,
+  type Film,
+} from "@/drizzle/schema";
+import { eq, and, lte, gte, isNotNull, sql, desc, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import fs from "fs";
-import path from "path";
-import { backdropURL } from "@/lib/utils";
 import { convertMinutes } from "@/lib/formatters";
 import { revalidatePath } from "next/cache";
 import { revalidateTag } from "next/cache";
-
-export const fetchCarouselAction = cache(async () => {
-  try {
-    const result = await db.query.carouselFilms.findMany();
-    const films = result;
-    const carouselData = films.map((film) => ({
-      tmdbId: film.tmdbId,
-      title: film.title,
-      genres: film.genres,
-      overview: film.overview,
-      seasons: film.seasons,
-      runtime: film.runtime,
-      rating: film.rating,
-      backdropImage: `/api/images/${film.tmdbId}`,
-      contentType: film.contentType,
-    }));
-
-    return carouselData;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-});
+import { users } from "@/drizzlebak/schema";
 
 // Generic function to fetch films by category
-const fetchFilmsByCategory = cache(async (category: string) => {
-  const result = db.query.films.findMany({
-    where: (films, { exists }) =>
-      exists(
-        db
-          .select()
-          .from(filmCategories)
-          .where(
-            and(
-              eq(filmCategories.filmTmdbId, films.tmdbId),
-              eq(filmCategories.category, category),
+const fetchFilmsByCategory = cache(
+  async (category: string): Promise<{ films: Film[] }> => {
+    const categoryFilms = await db.query.films.findMany({
+      where: (films, { exists }) =>
+        exists(
+          db
+            .select()
+            .from(filmCategories)
+            .where(
+              and(
+                eq(filmCategories.filmTmdbId, films.tmdbId),
+                eq(filmCategories.category, category),
+              ),
             ),
-          ),
-      ),
-    with: {
-      filmCategories: {
-        where: (filmCategories, { eq }) =>
-          eq(filmCategories.category, category),
+        ),
+      with: {
+        filmCategories: {
+          where: (filmCategories, { eq }) =>
+            eq(filmCategories.category, category),
+        },
       },
-    },
-    orderBy: (films, { desc }) => [desc(films.created_at)],
-  });
-  return result;
-});
+      orderBy: (films, { desc }) => [desc(films.created_at)],
+    });
+
+    const uniqueFilmsMap = new Map<number, Film>();
+    categoryFilms.forEach((film) => {
+      if (!uniqueFilmsMap.has(film.tmdbId)) {
+        uniqueFilmsMap.set(film.tmdbId, film);
+      }
+    });
+    const uniqueFilms = Array.from(uniqueFilmsMap.values());
+
+    return {
+      films: uniqueFilms,
+    };
+  },
+);
+
+export const fetchUserData = unstable_cache(
+  async (userId: number) => {
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+
+      with: {
+        userFilms: {
+          where: or(
+            eq(userFilms.isFavorite, true),
+            eq(userFilms.isWatchlist, true),
+          ),
+          orderBy: [desc(userFilms.updated_at)],
+        },
+      },
+    });
+
+    if (!existingUser) return null;
+
+    //separate favourites and watchlist
+
+    const favorites = existingUser.userFilms.filter((uf) => uf.isFavorite);
+    const watchlist = existingUser.userFilms.filter((uf) => uf.isWatchlist);
+
+    return {
+      favorites: favorites.map((uf) => ({
+        tmdbId: uf.tmdbId,
+        title: uf.title,
+        mediaType: uf.mediaType,
+        posterImage: uf.posterImage,
+        year: uf.year,
+        rating: uf.rating,
+      })),
+      watchlist: watchlist.map((uf) => ({
+        tmdbId: uf.tmdbId,
+        title: uf.title,
+        mediaType: uf.mediaType,
+        posterImage: uf.posterImage,
+        year: uf.year,
+        rating: uf.rating,
+      })),
+    };
+  },
+  ["user_data"],
+  { revalidate: 3600 },
+);
 
 // Cached functions using the generic function
 export const fetchCarouselFilms = unstable_cache(
@@ -244,233 +284,233 @@ export const fetchFilmGenres = cache(async () => {
   };
 });
 
-export const postToCarousel = async (
-  filmId: number,
-  mediaType: "movie" | "tv",
-) => {
-  try {
-    const movieDataReq = await fetch(
-      `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
-    );
-    const {
-      title: movieTitle,
-      name: tvTitle,
-      overview,
-      backdrop_path,
-      runtime: movieRuntime,
-      number_of_seasons: seasons,
-      genres: genreObjects,
-      vote_average,
-    } = await movieDataReq.json();
+// export const postToCarousel = async (
+//   filmId: number,
+//   mediaType: "movie" | "tv",
+// ) => {
+//   try {
+//     const movieDataReq = await fetch(
+//       `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+//     );
+//     const {
+//       title: movieTitle,
+//       name: tvTitle,
+//       overview,
+//       backdrop_path,
+//       runtime: movieRuntime,
+//       number_of_seasons: seasons,
+//       genres: genreObjects,
+//       vote_average,
+//     } = await movieDataReq.json();
+//
+//     const title = movieTitle || tvTitle;
+//     let runtime: string | null = null;
+//     if (!movieRuntime) {
+//       runtime = null;
+//     } else {
+//       runtime = convertMinutes(movieRuntime);
+//     }
+//     const genres = genreObjects.map(({ name }: { name: string }) => name);
+//     const rating = Math.round(vote_average);
+//     // Helper function to sanitize titles for filenames
+//     const response = await fetch(backdropURL(backdrop_path));
+//     const arrayBuffer = await response.arrayBuffer();
+//     const backdropBuffer = Buffer.from(arrayBuffer);
+//
+//     const carouselFilmData = {
+//       tmdbId: filmId,
+//       title,
+//       contentType: mediaType,
+//       runtime,
+//       seasons,
+//       overview,
+//       backdropImage: backdropBuffer,
+//       genres,
+//       rating,
+//     };
+//
+//     const [carouselFilm] = await db
+//       .insert(carouselFilms)
+//       .values(carouselFilmData)
+//       .onConflictDoUpdate({
+//         target: carouselFilms.tmdbId,
+//         set: {
+//           backdropImage: backdropBuffer,
+//           rating: carouselFilmData.rating,
+//           updated_at: new Date(),
+//         },
+//       })
+//       .returning();
+//
+//     revalidatePath("/");
+//     revalidatePath("/admin/carousel");
+//     revalidateTag("carousel");
+//
+//     return {
+//       success: true,
+//       message: `Film ${carouselFilm.title} inserted successfully`,
+//     };
+//   } catch (error) {
+//     console.error(`Error processing movie: `, error);
+//     return {
+//       success: false,
+//       message: "An error occurred on the server",
+//     };
+//   }
+// };
 
-    const title = movieTitle || tvTitle;
-    let runtime: string | null = null;
-    if (!movieRuntime) {
-      runtime = null;
-    } else {
-      runtime = convertMinutes(movieRuntime);
-    }
-    const genres = genreObjects.map(({ name }: { name: string }) => name);
-    const rating = Math.round(vote_average);
-    // Helper function to sanitize titles for filenames
-    const response = await fetch(backdropURL(backdrop_path));
-    const arrayBuffer = await response.arrayBuffer();
-    const backdropBuffer = Buffer.from(arrayBuffer);
-
-    const carouselFilmData = {
-      tmdbId: filmId,
-      title,
-      contentType: mediaType,
-      runtime,
-      seasons,
-      overview,
-      backdropImage: backdropBuffer,
-      genres,
-      rating,
-    };
-
-    const [carouselFilm] = await db
-      .insert(carouselFilms)
-      .values(carouselFilmData)
-      .onConflictDoUpdate({
-        target: carouselFilms.tmdbId,
-        set: {
-          backdropImage: backdropBuffer,
-          rating: carouselFilmData.rating,
-          updated_at: new Date(),
-        },
-      })
-      .returning();
-
-    revalidatePath("/");
-    revalidatePath("/admin/carousel");
-    revalidateTag("carousel");
-
-    return {
-      success: true,
-      message: `Film ${carouselFilm.title} inserted successfully`,
-    };
-  } catch (error) {
-    console.error(`Error processing movie: `, error);
-    return {
-      success: false,
-      message: "An error occurred on the server",
-    };
-  }
-};
-
-export const addToCarousel = async (
-  filmId: number,
-  mediaType: "movie" | "tv",
-) => {
-  try {
-    const movieDataReq = await fetch(
-      `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
-    );
-    const {
-      title: movieTitle,
-      name: tvTitle,
-      overview,
-      backdrop_path,
-      runtime: movieRuntime,
-      number_of_seasons: seasons,
-      genres: genreObjects,
-    } = await movieDataReq.json();
-
-    const title = movieTitle || tvTitle;
-    let runtime: string | null = null;
-    if (!movieRuntime) {
-      runtime = null;
-    } else {
-      runtime = convertMinutes(movieRuntime);
-    }
-    const genres = genreObjects.map(({ name }: { name: string }) => ({ name }));
-
-    // Helper function to sanitize titles for filenames
-    const sanitizeFileName = (title: string) =>
-      title
-        .toLowerCase()
-        .replace(/\s+/g, "_") // Replace spaces with underscores
-        .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
-
-    const response = await fetch(backdropURL(backdrop_path));
-    const arrayBuffer = await response.arrayBuffer();
-    const posterBuffer = Buffer.from(arrayBuffer);
-
-    // Create directory if it doesn't exist
-    const publicDir = path.join(process.cwd(), "public", "carousel");
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-
-    // Save image to filesystem
-    const fileName = `${sanitizeFileName(title)}.jpg`;
-    const filePath = path.join(publicDir, fileName);
-    fs.writeFileSync(filePath, posterBuffer);
-
-    // Create film object with image path
-    const film = {
-      tmdbId: filmId,
-      title,
-      contentType: mediaType,
-      runtime,
-      seasons,
-      overview,
-      backdropImage: `/carousel/${fileName}`,
-      genres,
-    };
-
-    // Add to carousel data
-    const dataPath = path.join(process.cwd(), "src", "data");
-    if (!fs.existsSync(dataPath)) {
-      console.log(`Creating directory ${dataPath}`);
-      fs.mkdirSync(dataPath, { recursive: true });
-
-      console.log(`Created directory ${dataPath} successfully`);
-    }
-    const carouselFile = "carousel.ts";
-    const fullDataPath = path.join(dataPath, carouselFile);
-
-    const carouselData = fs.existsSync(fullDataPath)
-      ? require("../../../../../src/data/carousel.ts").carouselFilms
-      : [];
-
-    // Avoid duplicates
-    if (!carouselData.some((f: any) => f.tmdbId === film.tmdbId)) {
-      const updatedFilms = [...carouselData, film];
-
-      // Create data directory if it doesn't exist
-      const dataDir = path.dirname(fullDataPath);
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      // Write formatted TypeScript file
-      const fileContent = `// Auto-generated carousel data
-export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
-
-      fs.writeFileSync(fullDataPath, fileContent);
-      console.log("Successfully updated carousel data");
-    }
-
-    revalidateTag("carousel");
-    revalidatePath("/admin/carousel");
-    revalidatePath("/");
-
-    return film;
-  } catch (error) {
-    console.error("Error processing movie:", error);
-    throw error;
-  }
-};
-
-export const deleteFromCarousel = cache(async (filmId: number) => {
-  try {
-    const dataPath = path.join(process.cwd(), "src", "data", "carousel.ts");
-
-    // Read current carousel data
-    const carouselData = fs.existsSync(dataPath)
-      ? require("../../../../../src/data/carousel.ts").carouselFilms
-      : [];
-
-    // Find the film to delete
-    const filmToDelete = carouselData.find((f: any) => f.tmdbId === filmId);
-    if (!filmToDelete) {
-      return;
-    }
-
-    // Delete associated image
-    if (filmToDelete.backdropImage) {
-      const imagePath = path.join(
-        process.cwd(),
-        "public",
-        filmToDelete.backdropImage,
-      );
-
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-    }
-
-    // Update carousel data
-    const updatedFilms = carouselData.filter((f: any) => f.tmdbId !== filmId);
-
-    // Write updated data back to file
-    const fileContent = `// Auto-generated carousel data
-export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
-
-    fs.writeFileSync(dataPath, fileContent);
-
-    revalidateTag("carousel");
-    revalidatePath("/admin/carousel");
-    revalidatePath("/");
-
-    return true;
-  } catch (error) {
-    console.error("Error deleting film:", error);
-    throw error;
-  }
-});
+// export const addToCarousel = async (
+//   filmId: number,
+//   mediaType: "movie" | "tv",
+// ) => {
+//   try {
+//     const movieDataReq = await fetch(
+//       `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+//     );
+//     const {
+//       title: movieTitle,
+//       name: tvTitle,
+//       overview,
+//       backdrop_path,
+//       runtime: movieRuntime,
+//       number_of_seasons: seasons,
+//       genres: genreObjects,
+//     } = await movieDataReq.json();
+//
+//     const title = movieTitle || tvTitle;
+//     let runtime: string | null = null;
+//     if (!movieRuntime) {
+//       runtime = null;
+//     } else {
+//       runtime = convertMinutes(movieRuntime);
+//     }
+//     const genres = genreObjects.map(({ name }: { name: string }) => ({ name }));
+//
+//     // Helper function to sanitize titles for filenames
+//     const sanitizeFileName = (title: string) =>
+//       title
+//         .toLowerCase()
+//         .replace(/\s+/g, "_") // Replace spaces with underscores
+//         .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
+//
+//     const response = await fetch(backdropURL(backdrop_path));
+//     const arrayBuffer = await response.arrayBuffer();
+//     const posterBuffer = Buffer.from(arrayBuffer);
+//
+//     // Create directory if it doesn't exist
+//     const publicDir = path.join(process.cwd(), "public", "carousel");
+//     if (!fs.existsSync(publicDir)) {
+//       fs.mkdirSync(publicDir, { recursive: true });
+//     }
+//
+//     // Save image to filesystem
+//     const fileName = `${sanitizeFileName(title)}.jpg`;
+//     const filePath = path.join(publicDir, fileName);
+//     fs.writeFileSync(filePath, posterBuffer);
+//
+//     // Create film object with image path
+//     const film = {
+//       tmdbId: filmId,
+//       title,
+//       contentType: mediaType,
+//       runtime,
+//       seasons,
+//       overview,
+//       backdropImage: `/carousel/${fileName}`,
+//       genres,
+//     };
+//
+//     // Add to carousel data
+//     const dataPath = path.join(process.cwd(), "src", "data");
+//     if (!fs.existsSync(dataPath)) {
+//       console.log(`Creating directory ${dataPath}`);
+//       fs.mkdirSync(dataPath, { recursive: true });
+//
+//       console.log(`Created directory ${dataPath} successfully`);
+//     }
+//     const carouselFile = "carousel.ts";
+//     const fullDataPath = path.join(dataPath, carouselFile);
+//
+//     const carouselData = fs.existsSync(fullDataPath)
+//       ? require("../../../../../src/data/carousel.ts").carouselFilms
+//       : [];
+//
+//     // Avoid duplicates
+//     if (!carouselData.some((f: any) => f.tmdbId === film.tmdbId)) {
+//       const updatedFilms = [...carouselData, film];
+//
+//       // Create data directory if it doesn't exist
+//       const dataDir = path.dirname(fullDataPath);
+//       if (!fs.existsSync(dataDir)) {
+//         fs.mkdirSync(dataDir, { recursive: true });
+//       }
+//
+//       // Write formatted TypeScript file
+//       const fileContent = `// Auto-generated carousel data
+// export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
+//
+//       fs.writeFileSync(fullDataPath, fileContent);
+//       console.log("Successfully updated carousel data");
+//     }
+//
+//     revalidateTag("carousel");
+//     revalidatePath("/admin/carousel");
+//     revalidatePath("/");
+//
+//     return film;
+//   } catch (error) {
+//     console.error("Error processing movie:", error);
+//     throw error;
+//   }
+// };
+//
+// export const deleteFromCarousel = cache(async (filmId: number) => {
+//   try {
+//     const dataPath = path.join(process.cwd(), "src", "data", "carousel.ts");
+//
+//     // Read current carousel data
+//     const carouselData = fs.existsSync(dataPath)
+//       ? require("../../../../../src/data/carousel.ts").carouselFilms
+//       : [];
+//
+//     // Find the film to delete
+//     const filmToDelete = carouselData.find((f: any) => f.tmdbId === filmId);
+//     if (!filmToDelete) {
+//       return;
+//     }
+//
+//     // Delete associated image
+//     if (filmToDelete.backdropImage) {
+//       const imagePath = path.join(
+//         process.cwd(),
+//         "public",
+//         filmToDelete.backdropImage,
+//       );
+//
+//       if (fs.existsSync(imagePath)) {
+//         fs.unlinkSync(imagePath);
+//       }
+//     }
+//
+//     // Update carousel data
+//     const updatedFilms = carouselData.filter((f: any) => f.tmdbId !== filmId);
+//
+//     // Write updated data back to file
+//     const fileContent = `// Auto-generated carousel data
+// export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
+//
+//     fs.writeFileSync(dataPath, fileContent);
+//
+//     revalidateTag("carousel");
+//     revalidatePath("/admin/carousel");
+//     revalidatePath("/");
+//
+//     return true;
+//   } catch (error) {
+//     console.error("Error deleting film:", error);
+//     throw error;
+//   }
+// });
 
 export const getFilms = cache(
   unstable_cache(
@@ -485,3 +525,153 @@ export const getFilms = cache(
     },
   ),
 );
+
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+
+async function fetchTmdbData(tmdbId: number, mediaType: "movie" | "tv") {
+  const url = `${TMDB_BASE_URL}/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`TMDB API Error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function fetchTmdbImage(imagePath: string, width: string) {
+  if (!imagePath) {
+    throw new Error("Image path is required");
+  }
+
+  const url = `https://image.tmdb.org/t/p/${width}${imagePath}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${url}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  return new Uint8Array(arrayBuffer);
+}
+
+export async function insertFilmFromTmdb(
+  tmdbId: number,
+  category: string,
+  mediaType: "movie" | "tv" = "movie",
+): Promise<{
+  film: Film;
+  message: string;
+  action: "none" | "category_added" | "film_created";
+}> {
+  try {
+    // 1. Fetch TMDB data
+    const tmdbData = await fetchTmdbData(tmdbId, mediaType);
+
+    // 2. Validate required image paths
+    if (!tmdbData.poster_path) {
+      throw new Error("TMDB poster path is missing");
+    }
+    if (!tmdbData.backdrop_path) {
+      throw new Error("TMDB backdrop path is missing");
+    }
+
+    // 3. Fetch images with specified dimensions
+    const [posterBlob, backdropBlob] = await Promise.all([
+      fetchTmdbImage(tmdbData.poster_path, "w500"), // Poster width 500px
+      fetchTmdbImage(tmdbData.backdrop_path, "w1280"), // Backdrop width 1280px
+    ]);
+
+    // 4. Prepare film data
+    const filmData: InsertFilm = {
+      tmdbId,
+      title: tmdbData.title || tmdbData.name,
+      overview: tmdbData.overview,
+      contentType: mediaType === "movie" ? "movie" : "tv",
+      mediaType: mediaType,
+      genres: JSON.stringify(tmdbData.genres.map((g) => g.name)),
+      year: getReleaseYear(tmdbData, mediaType),
+      posterImage: posterBlob,
+      backdropImage: backdropBlob,
+      rating: Math.round(tmdbData.vote_average * 10),
+      seasons: mediaType === "tv" ? tmdbData.number_of_seasons : null,
+      runtime: mediaType === "movie" ? convertMinutes(tmdbData.runtime) : null,
+      quality: "HD",
+    };
+
+    // 5. Insert into database
+    return await db.transaction(async (tx) => {
+      // Check for existing film
+      // Check for existing film
+      const existingFilm = await tx.query.films.findFirst({
+        where: eq(films.tmdbId, tmdbId),
+      });
+
+      if (existingFilm) {
+        // Check if category already exists for this film
+        const existingCategory = await tx.query.filmCategories.findFirst({
+          where: and(
+            eq(filmCategories.filmTmdbId, existingFilm.tmdbId),
+            eq(filmCategories.category, category),
+          ),
+        });
+
+        if (existingCategory) {
+          return {
+            film: existingFilm,
+            message: `Film already exists in category '${category}'`,
+            action: "none",
+          };
+        }
+
+        // Add new category to existing film
+        await tx.insert(filmCategories).values({
+          filmTmdbId: existingFilm.tmdbId,
+          category,
+        });
+
+        revalidateTag(category);
+        revalidatePath("/");
+        revalidatePath(`/admin/${category}`);
+
+        return {
+          film: existingFilm,
+          message: `Added film to new category '${category}'`,
+          action: "category_added",
+        };
+      }
+
+      // Insert new film and category
+      const [insertedFilm] = await tx
+        .insert(films)
+        .values(filmData)
+        .returning();
+
+      await tx.insert(filmCategories).values({
+        filmTmdbId: insertedFilm.tmdbId,
+        category,
+      });
+
+      revalidateTag(category);
+      revalidatePath("/");
+      revalidatePath(`/admin/${category}`);
+      return {
+        film: insertedFilm,
+        message: "New film created with category",
+        action: "film_created",
+      };
+    });
+  } catch (error) {
+    throw new Error(
+      `Film insertion failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
+// Helper functions
+function getReleaseYear(data: any, mediaType: string): number {
+  const dateString =
+    mediaType === "movie" ? data.release_date : data.first_air_date;
+  return parseInt(dateString?.split("-")[0] || new Date().getFullYear());
+}
