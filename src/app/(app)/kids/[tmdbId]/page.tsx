@@ -1,48 +1,12 @@
-import { fetchKids } from "@/features/films/server/db/films";
 import Prewatch from "@/components/Prewatch";
-import { db } from "@/drizzle";
-import { films } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
-import { cache } from "react";
-
-export const generateStaticParams = async () => {
-  const { data: kids } = await fetchKids();
-  return kids.slice(0, 6).map((film) => ({
-    tmdbId: film.tmdbId.toString(),
-  }));
-};
+import { searchFilm } from "@/features/tmdb/server/actions/films";
 
 const page = async ({ params }: { params: Promise<{ tmdbId: string }> }) => {
   const { tmdbId } = await params;
-  const singleFilm = await queryFilmById({ tmdbId });
-  if (!singleFilm) return notFound();
-
-  const {
-    title,
-    overview,
-    year,
-    runtime,
-    rating,
-    genres,
-    posterImage,
-    backdropImage,
-    mediaType,
-  } = singleFilm;
-
-  const film = {
-    title,
-    overview,
-    year,
-    runtime,
-    rating,
-    genres,
-    tmdbId,
-    posterImage,
-    backdropImage,
-    media: mediaType,
-    media_type: mediaType,
-  };
+  const filmId = parseInt(tmdbId);
+  const media_type = "movie";
+  const data = await searchFilm(media_type, filmId);
+  const film = data;
 
   return (
     <div className="w-full text-slate-200 relative">
@@ -52,11 +16,3 @@ const page = async ({ params }: { params: Promise<{ tmdbId: string }> }) => {
 };
 
 export default page;
-
-const queryFilmById = cache(async ({ tmdbId }: { tmdbId: string }) => {
-  const filmId = parseInt(tmdbId);
-  const result = await db.query.films.findFirst({
-    where: eq(films.tmdbId, filmId),
-  });
-  return result || null;
-});

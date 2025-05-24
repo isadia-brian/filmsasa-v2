@@ -6,8 +6,10 @@ import ActorCard from "../ActorCard";
 import dynamic from "next/dynamic";
 import SeasonEpisode from "./SeasonEpisode";
 
-const RecommendedCard = dynamic(() => import("./RecommendedCard"));
-const YoutubePlayer = dynamic(() => import("../YoutubePlayer"));
+const RecommendedCard = dynamic(() => import("./RecommendedCard"), {
+  ssr: false,
+});
+const YoutubePlayer = dynamic(() => import("../YoutubePlayer"), { ssr: false });
 const TmdbContent = ({
   media,
   tmdbId,

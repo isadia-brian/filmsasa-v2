@@ -104,9 +104,10 @@ const PrewatchClient = (props: {
             src={`https://image.tmdb.org/t/p/w1280${backdropImage}`}
             alt={title}
             fill
-            quality={70}
+            quality={80}
             className="object-cover"
             priority={true}
+            loading="eager"
             sizes="
           (max-width: 768px) 100vw,1280px
         "
@@ -181,7 +182,7 @@ const PrewatchClient = (props: {
             <button
               type="button"
               onClick={toggleYoutube}
-              className="flex items-center justify-center gap-2  bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm"
+              className="transition-colors flex items-center justify-center gap-2  bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm hover:bg-white hover:text-black hover:border-white"
             >
               <span>
                 <Tube className="h-4 w-4" />
@@ -191,7 +192,7 @@ const PrewatchClient = (props: {
             <button
               type="button"
               onClick={() => handleClick(tmdbId, "watchlist")}
-              className=" flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm"
+              className="transition-colors flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm hover:bg-black hover:text-white hover:border-black"
             >
               <span>
                 <PlusIcon className="h-4 w-4" />

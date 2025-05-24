@@ -19,7 +19,7 @@ const SeasonEpisode = ({
     [];
 
   return (
-    <div className="flex flex-col py-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400 overflow-x-scroll w-full">
+    <div className="flex flex-col py-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400 overflow-x-scroll w-full no-scrollbar">
       <div className=" flex items-center gap-4">
         {Array.from({ length: seasons }, (_, i) => {
           const seasonNumber = i + 1;
@@ -62,6 +62,8 @@ const SeasonEpisode = ({
                     }
                     alt={episode.name}
                     fill
+                    loading="lazy"
+                    priority={false}
                     className="object-cover rounded-lg"
                   />
                 </div>

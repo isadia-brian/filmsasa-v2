@@ -22,6 +22,7 @@ import { FilmType } from "@/types/films";
 
 const AuthModal = dynamic(
   () => import("../../../features/auth/components/AuthModal"),
+  { ssr: false },
 );
 
 const headerButtons = [

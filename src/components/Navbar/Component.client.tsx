@@ -100,7 +100,7 @@ const NavbarClient = ({ user }: { user: User }) => {
 
   return (
     <div className="relative">
-      <header className="fixed w-full top-0 bg-transparent left-0 z-500">
+      <header className="fixed w-full top-0 bg-transparent left-0 z-[1800]">
         <nav
           className="flex justify-between items-center py-4 px-4 z-500"
           role="navigation"
