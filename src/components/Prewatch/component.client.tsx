@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
-import { PlayIcon, PlusIcon, Star, Youtube as Tube } from "lucide-react";
+import { Heart, PlayIcon, PlusIcon, Youtube as Tube } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { aquire } from "@/app/fonts";
+import { addToUserList } from "@/features/users/server/db";
+import { FilmData } from "@/types/films";
+import { useRouter } from "next/navigation";
+import { posterURL } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 // import { addToWatchList } from "@/actions/watchList";
 const TmdbContent = dynamic(
-  () => import("../features/films/components/TmdbContent/"),
+  () => import("../../features/films/components/TmdbContent"),
 );
-const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
-  const { film, kidsPage } = props;
+const PrewatchClient = (props: {
+  film: any;
+  kidsPage?: boolean;
+  userId?: number;
+}) => {
+  const { film, kidsPage, userId } = props;
 
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const {
     title,
@@ -22,6 +34,7 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
     year,
     overview,
     backdropImage,
+    posterImage,
     genres,
     media_type,
     seasons,
@@ -31,14 +44,40 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
   // TODO: remove
   const singleFilm: number = parseInt(tmdbId);
 
-  const handleClick = async (individualFilm: number) => {
-    console.log(individualFilm);
-    // const response = await addToWatchList(userId, film);
+  const handleClick = useCallback(
+    async (tmdbId: number, action: "favorites" | "watchlist") => {
+      if (!userId || userId === 0) {
+        return;
+      } else if (loading) {
+        return;
+      } else {
+        try {
+          setLoading(true);
+          const film: FilmData = {
+            title,
+            mediaType: media_type,
+            posterImage: posterURL(posterImage),
+          };
+          const response = await addToUserList(userId, tmdbId, action, film);
+          const { success, message } = response;
 
-    // if (response.status === 200) {
-    // console.log("added to watchlist");
-    // }
-  };
+          toast({
+            title: success ? "Success" : "Error",
+            variant: success ? "default" : "destructive",
+            description: message,
+          });
+
+          if (success) router.refresh();
+        } catch (error) {
+          console.log("Error posting");
+          return;
+        } finally {
+          setLoading(false);
+        }
+      }
+    },
+    [loading, toast],
+  );
 
   const toggleYoutube = () => {
     setTrailerOpen(!trailerOpen);
@@ -75,12 +114,19 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
           />
         </div>
         <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
-          <div className="w-full">
+          <div className="w-full flex justify-between items-center">
             <h4
               className={`${aquire.className} text-4xl md:text-7xl max-w-[250px] md:max-w-[500px]`}
             >
               {title}
             </h4>
+            <div
+              className="mr-4 cursor-pointer"
+              role="button"
+              onClick={() => handleClick(tmdbId, "favorites")}
+            >
+              <Heart className="h-8 w-8" />
+            </div>
           </div>
 
           <div className="flex items-center justify-center md:mt-[60px] md:w-fit md:mx-auto">
@@ -136,13 +182,16 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
             <button
               type="button"
               onClick={toggleYoutube}
-              className=" bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm"
+              className="flex items-center justify-center gap-2  bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm"
             >
+              <span>
+                <Tube className="h-4 w-4" />
+              </span>
               Watch Trailer
             </button>
             <button
               type="button"
-              onClick={toggleYoutube}
+              onClick={() => handleClick(tmdbId, "watchlist")}
               className=" flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm"
             >
               <span>
@@ -166,4 +215,4 @@ const Prewatch = (props: { film: any; kidsPage?: boolean }) => {
   );
 };
 
-export default Prewatch;
+export default PrewatchClient;

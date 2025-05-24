@@ -33,7 +33,7 @@ const PaginatedFilms = ({
               break;
 
             case "kids":
-              link = `/kids/${item.tmdbId}`;
+              link = `/kids/${item.id}`;
               break;
 
             default:

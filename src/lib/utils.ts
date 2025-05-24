@@ -96,6 +96,7 @@ export const convertFilms = cache((films: DrizzleFilm[]) => {
     ...film,
     backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
     posterImage: bufferToDataURL(film.posterImage as Uint8Array),
+    genres: JSON.parse(film.genres) as string[],
   }));
 
   return filmsWithDataUrl;

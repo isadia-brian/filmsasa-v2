@@ -213,14 +213,14 @@ export const fetchFilms = cache(
         discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${process.env.TMDB_API_KEY}&page=`;
       }
       const urls = Array.from(
-        { length: 30 },
+        { length: 10 },
         (_, i) => `${discoverUrl}${i + 1}`,
       );
 
       try {
         const pages = await Promise.all(
           urls.map((url) =>
-            fetch(url, { next: { tags: ["tmdb-data"] } })
+            fetch(url)
               .then((res) => res.json())
               .catch((error) => {
                 console.error("Fetch error:", error);

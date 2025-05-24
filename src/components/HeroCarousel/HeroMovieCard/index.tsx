@@ -9,17 +9,20 @@ import { memo, useCallback, useState } from "react";
 import { addToUserList } from "@/features/users/server/db";
 import { useToast } from "@/hooks/use-toast";
 import { FilmData } from "@/types/films";
+import { useRouter } from "next/navigation";
 
 type Proptype = {
   film: any;
+  userId?: number;
   priorityLoad?: boolean;
 };
 
 export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
-  const { film, priorityLoad = false } = props;
+  const { film, userId, priorityLoad = false } = props;
   const {
     title,
     backdropImage,
+    posterImage,
     genres,
     mediaType,
     tmdbId,
@@ -28,13 +31,14 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
     seasons,
     runtime,
   } = film;
+  const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
 
   // Optimized with useCallback to prevent recreation on re-renders
   const handleClick = useCallback(
-    async (tmdbId: number, userId: number) => {
+    async (tmdbId: number, userId?: number) => {
       if (!userId || userId === 0) {
         return;
       } else if (loading) {
@@ -45,6 +49,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
           const film: FilmData = {
             title,
             mediaType,
+            posterImage,
           };
           const response = await addToUserList(
             userId,
@@ -59,6 +64,8 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
             variant: success ? "default" : "destructive",
             description: message,
           });
+
+          if (success) router.refresh();
         } catch (error) {
           console.log("Error posting");
           return;
@@ -139,7 +146,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
                     ? "disabled:bg-neutral-300 disabled:cursor-not-allowed"
                     : "bg-white/90 text-black cursor-pointer hover:bg-black hover:text-white"
                 }`}
-                onClick={() => handleClick(tmdbId, 0)}
+                onClick={() => handleClick(tmdbId, userId)}
                 disabled={loading}
               >
                 {loading ? (
