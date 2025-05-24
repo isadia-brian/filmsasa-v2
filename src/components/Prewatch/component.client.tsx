@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { posterURL } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-// import { addToWatchList } from "@/actions/watchList";
 const TmdbContent = dynamic(
   () => import("../../features/films/components/TmdbContent"),
 );
@@ -114,7 +113,7 @@ const PrewatchClient = (props: {
           />
         </div>
         <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
-          <div className="w-full flex justify-between items-center">
+          <div className="w-full flex justify-between items-center z-[1000]">
             <h4
               className={`${aquire.className} text-4xl md:text-7xl max-w-[250px] md:max-w-[500px]`}
             >
@@ -129,7 +128,7 @@ const PrewatchClient = (props: {
             </div>
           </div>
 
-          <div className="flex items-center justify-center md:mt-[60px] md:w-fit md:mx-auto">
+          <div className="md:absolute md:z-[1500]  md:h-full md:top-0  flex items-center justify-center md:left-[50%] md:-translate-x-1/2 md:w-fit">
             <Link
               href={{
                 pathname: `/watch`,

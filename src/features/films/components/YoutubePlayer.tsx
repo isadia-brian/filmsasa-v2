@@ -7,7 +7,7 @@ const YoutubePlayer = (props: {
   const { officialTrailer, toggleYoutube, title, videoId } = props;
 
   return (
-    <div className="fixed inset-0 flex flex-col gap-8 py-12 md:py-0 md:justify-center items-center backdrop-blur-md z-700">
+    <div className="fixed inset-0 flex flex-col gap-8 py-12 md:py-0 md:justify-center items-center backdrop-blur-md z-[2000]">
       <div
         className="transition duration-150 ease-in-out h-[50px] w-[50px] bg-neutral-900/80 rounded-full text-white flex items-center justify-center cursor-pointer hover:bg-white hover:text-black"
         onClick={toggleYoutube}
