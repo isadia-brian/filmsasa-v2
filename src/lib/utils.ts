@@ -1,6 +1,5 @@
-import { Film } from "@/drizzle/schema";
+import { type Film as DrizzleFilm } from "@/drizzle/schema";
 import { clsx, type ClassValue } from "clsx";
-import { Film } from "lucide-react";
 import { cache } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -92,12 +91,11 @@ export function bufferToDataURL(
   return `data:${type};base64,${base64}`;
 }
 
-export const convertFilms = cache((films: Film[]) => {
+export const convertFilms = cache((films: DrizzleFilm[]) => {
   const filmsWithDataUrl = films.map((film) => ({
     ...film,
     backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
     posterImage: bufferToDataURL(film.posterImage as Uint8Array),
-    genres: JSON.parse(film.genres) as string[],
   }));
 
   return filmsWithDataUrl;

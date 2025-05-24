@@ -1,19 +1,13 @@
-export type Film = {
-  tmdbId: number;
-  title: string;
-  overview: string;
-  contentType: "movie" | "tv" | "kids";
-  mediaType: "movie" | "tv";
-  backdropImage: Uint8Array;
-  posterImage: Uint8Array;
-  genres: string[];
-  year: number;
-  quality: string;
-  rating?: number | null;
-  seasons?: number | null;
-  runtime?: string | null;
-  filmCategories?: FilmCategory[];
-};
+import { Film } from "@/drizzle/schema";
+
+export interface FilmType {
+  posterImage?: string | null | undefined;
+  title?: string | undefined;
+  contentType?: "movie" | "tv" | undefined;
+  tmdbId?: number | undefined;
+  filmCategories?: Film["filmCategories"];
+  filterCategory?: string;
+}
 
 export type FilmCategory = {
   filmTmdbId: number;
@@ -51,4 +45,12 @@ export interface FilmCardProps {
     mediaType?: string;
     year?: number;
   };
+}
+
+export interface FilmData {
+  title: string;
+  mediaType: "movie" | "tv";
+  posterImage?: string;
+  year?: number;
+  rating?: number;
 }

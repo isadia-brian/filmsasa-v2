@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+
+import { useFilter } from "@/hooks/useFilterSection";
 
 import {
   TrendingUp,
@@ -15,7 +17,8 @@ import dynamic from "next/dynamic";
 import { type Film } from "@/drizzle/schema";
 import FilmCard from "@/features/films/components/FilmCard";
 import { User } from "@/types";
-import { fetchUserData } from "@/features/films/server/db/films";
+import { fetchUserData } from "@/features/users/server/db";
+import { FilmType } from "@/types/films";
 
 const AuthModal = dynamic(
   () => import("../../../features/auth/components/AuthModal"),
@@ -40,68 +43,6 @@ const headerButtons = [
   },
 ];
 
-interface FilmType {
-  posterImage?: string | null | undefined;
-  title?: string | undefined;
-  contentType?: "movie" | "tv" | undefined;
-  tmdbId?: number | undefined;
-  filmCategories?: Film["filmCategories"];
-  filterCategory?: string;
-}
-
-const useFilter = (
-  data: any,
-  filter: string,
-  favourites: any,
-  watchList: any,
-) => {
-  const [filteredData, setFilteredData] = useState(data);
-
-  useEffect(() => {
-    //filter data by type
-
-    switch (filter) {
-      case "Trending":
-        const trendingItems = data?.filter((film: any) => {
-          const features = film?.filmCategories?.map(
-            (t: { category: string }) => t.category,
-          );
-
-          const categories = Array.from(new Set(features?.flat()));
-
-          return categories.includes("trending");
-        });
-
-        const trending = trendingItems;
-
-        setFilteredData(trending);
-        break;
-      case "Popular":
-        const popularItems = data?.filter((film: any) => {
-          const features = film?.filmCategories?.map(
-            (t: { category: string }) => t.category,
-          );
-
-          const categories = Array.from(new Set(features?.flat()));
-
-          return categories.includes("popular");
-        });
-        const popular = popularItems;
-        setFilteredData(popular);
-        break;
-      case "Favourites":
-        setFilteredData(favourites);
-        break;
-
-      default:
-        setFilteredData(watchList);
-        break;
-    }
-  }, [data, filter, favourites, watchList]); //Update filtered data when the data or filter changes
-
-  return filteredData;
-};
-
 const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [activeButtonIndex, setActiveButtonIndex] = useState(0);
@@ -111,21 +52,15 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
   const [watchList, setWatchList] = useState<FilmType[]>([]);
   const [showAuth, setShowAuth] = useState<boolean>(false);
 
-  const getUserWatchList = async (id?: number) => {
-    return [
-      {
-        title: "Back in Action",
-        tmdbId: 993710,
-        posterImage: "/123455.jpg",
-      },
-    ];
-  };
-
-  const getUserFavouriteList = async (userId: number) => {
+  const getUserData = async (userId: number) => {
     const data = await fetchUserData(userId);
     const favorites = data?.favorites;
-    const userFavouriteList = favorites;
-    return userFavouriteList;
+    const watchList = data?.watchlist;
+
+    return {
+      favorites,
+      watchList,
+    };
   };
 
   // The filtered data that is returned by the custom hook
@@ -140,9 +75,9 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
       const value = filter;
       setFilter(value);
       let favourited = null;
-      const userFilms = await getUserFavouriteList(user?.id);
-      if (userFilms && userFilms.length > 0) {
-        favourited = userFilms.map((film) => {
+      const { favorites } = await getUserData(user?.id);
+      if (favorites && favorites.length > 0) {
+        favourited = favorites.map((film) => {
           if (film !== null)
             return {
               title: film.title,
@@ -152,9 +87,9 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
             };
         });
       }
-      const userFavouriteFilms = favourited ?? [];
+      const userFavourites = favourited ?? [];
 
-      const userFavouriteList = userFavouriteFilms?.map((item) => ({
+      const userFavouriteList = userFavourites?.map((item) => ({
         ...item,
         filterCategory: "Favourites",
       }));
@@ -163,13 +98,26 @@ const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
     } else {
       const value = "WatchList";
       setFilter(value);
-      const userWatchList = await getUserWatchList(user?.id);
+      let userWatchList = null;
+      const { watchList } = await getUserData(user?.id);
+      if (watchList && watchList.length > 0) {
+        userWatchList = watchList.map((film) => {
+          return {
+            title: film.title,
+            tmdbId: film.tmdbId,
+            contentType: film.mediaType,
+            posterImage: film.posterImage,
+          };
+        });
+      }
 
-      const watchListWithCategory = userWatchList.map((item) => ({
+      const userWatchListFilms = userWatchList ?? [];
+
+      const userWatchLists = userWatchListFilms?.map((item) => ({
         ...item,
         filterCategory: "WatchList",
       }));
-      setWatchList(watchListWithCategory);
+      setWatchList(userWatchLists);
     }
   };
 

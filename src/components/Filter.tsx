@@ -1,10 +1,14 @@
-import { fetchFilmGenres } from "@/features/films/server/db/films";
+import { fetchFilmGenres } from "@/features/tmdb/server/actions/films";
 import DropDown from "./DropDown";
 import SearchFilm from "./SearchFilm";
 
 const Filter = async ({ filmType }: { filmType: string }) => {
-  const data = await fetchFilmGenres();
-  const { genres, years } = data;
+  let mediaType: "movie" | "tv" = "movie";
+
+  if (filmType === "series") {
+    mediaType = "tv";
+  }
+  const genres = await fetchFilmGenres(mediaType);
 
   const sortByList = [
     {
@@ -14,10 +18,6 @@ const Filter = async ({ filmType }: { filmType: string }) => {
     {
       name: "Top Rated",
       value: "top_rated",
-    },
-    {
-      name: "Newest",
-      value: "newest",
     },
   ];
 
@@ -43,7 +43,7 @@ const Filter = async ({ filmType }: { filmType: string }) => {
             ))}
           </ul>
         </DropDown>
-        <DropDown label="Year">
+        {/*<DropDown label="Year">
           <ul className="grid grid-cols-13 gap-2 pl-3">
             {years?.map((year, index) => (
               <li
@@ -55,10 +55,10 @@ const Filter = async ({ filmType }: { filmType: string }) => {
               </li>
             ))}
           </ul>
-        </DropDown>
+        </DropDown>*/}
         <DropDown label="Genre">
           <ul className="grid grid-cols-4 gap-2 pl-4">
-            {genres?.map((genre, index) => (
+            {genres?.map((genre: string, index: number) => (
               <li
                 key={index}
                 className="text-sm line-clamp-1 text-neutral-800 py-2 max-w-fit hover:bg-stone-100 px-2 rounded-md"

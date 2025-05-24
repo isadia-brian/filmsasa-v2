@@ -1,20 +1,12 @@
 "use server";
 
 import { db } from "@/drizzle";
-import {
-  filmCategories,
-  films,
-  InsertFilm,
-  userFilms,
-  type Film,
-} from "@/drizzle/schema";
-import { eq, and, lte, gte, isNotNull, sql, desc, or } from "drizzle-orm";
+import { filmCategories, films, InsertFilm, type Film } from "@/drizzle/schema";
+import { eq, and, lte, gte, isNotNull, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { convertMinutes } from "@/lib/formatters";
-import { revalidatePath } from "next/cache";
-import { revalidateTag } from "next/cache";
-import { users } from "@/drizzlebak/schema";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(
@@ -38,7 +30,7 @@ const fetchFilmsByCategory = cache(
             eq(filmCategories.category, category),
         },
       },
-      orderBy: (films, { desc }) => [desc(films.created_at)],
+      orderBy: (films, { asc }) => [asc(films.created_at)],
     });
 
     const uniqueFilmsMap = new Map<number, Film>();
@@ -53,52 +45,6 @@ const fetchFilmsByCategory = cache(
       films: uniqueFilms,
     };
   },
-);
-
-export const fetchUserData = unstable_cache(
-  async (userId: number) => {
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-
-      with: {
-        userFilms: {
-          where: or(
-            eq(userFilms.isFavorite, true),
-            eq(userFilms.isWatchlist, true),
-          ),
-          orderBy: [desc(userFilms.updated_at)],
-        },
-      },
-    });
-
-    if (!existingUser) return null;
-
-    //separate favourites and watchlist
-
-    const favorites = existingUser.userFilms.filter((uf) => uf.isFavorite);
-    const watchlist = existingUser.userFilms.filter((uf) => uf.isWatchlist);
-
-    return {
-      favorites: favorites.map((uf) => ({
-        tmdbId: uf.tmdbId,
-        title: uf.title,
-        mediaType: uf.mediaType,
-        posterImage: uf.posterImage,
-        year: uf.year,
-        rating: uf.rating,
-      })),
-      watchlist: watchlist.map((uf) => ({
-        tmdbId: uf.tmdbId,
-        title: uf.title,
-        mediaType: uf.mediaType,
-        posterImage: uf.posterImage,
-        year: uf.year,
-        rating: uf.rating,
-      })),
-    };
-  },
-  ["user_data"],
-  { revalidate: 3600 },
 );
 
 // Cached functions using the generic function
@@ -243,45 +189,6 @@ export const fetchFeatured = cache(async () => {
 
   // Combine results (trending first, then popular)
   return [...trendingFilms, ...popularFilms];
-});
-
-// Fetch section films in a single query
-export const fetchSectionFilms = cache(async () => {
-  const [movies, series, kids] = await Promise.all([
-    fetchMovies(),
-    fetchSeries(),
-    fetchKids(),
-  ]);
-
-  const slicedMovies = movies?.data?.slice(0, 7);
-  const slicedSeries = series?.data?.slice(0, 7);
-  const slicedKids = kids?.data?.slice(0, 7);
-
-  const allFilms = [...slicedMovies, ...slicedSeries, ...slicedKids];
-  return allFilms;
-});
-
-export const fetchFilmGenres = cache(async () => {
-  const films = await getFilms();
-
-  // Handle possible undefined genres
-  const allGenres = films.flatMap((film) => film.genres ?? []);
-
-  // Handle possible undefined years (filter them out)
-  const allYears = films.flatMap((film) => (film.year ? [film.year] : []));
-
-  const uniqueGenres = [...new Set(allGenres)];
-  const uniqueYears = [...new Set(allYears)];
-
-  const sortedGenres = uniqueGenres.sort();
-  const sortedYears = uniqueYears
-    .filter((year) => year <= 2025)
-    .sort((a, b) => b - a);
-
-  return {
-    genres: sortedGenres,
-    years: sortedYears,
-  };
 });
 
 // export const postToCarousel = async (

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
-import { getCardLink, posterURL } from "@/lib/utils";
+import { getCardLink } from "@/lib/utils";
 import { FilmCardProps } from "@/types/films";
 
 const FilmCard: React.FC<FilmCardProps> = (props) => {
-  const { film, section, content } = props;
+  const { film, section } = props;
 
   const title = film.title;
   const image = film.posterImage;

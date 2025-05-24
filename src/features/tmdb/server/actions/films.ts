@@ -4,6 +4,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { TMDBFilm } from "@/types/films";
 import { convertMinutes } from "@/lib/formatters";
+import { posterURL } from "@/lib/utils";
 
 const baseUrl: string = `https://api.themoviedb.org/3`;
 
@@ -12,7 +13,7 @@ export const searchFilmByName = async (
   query: string,
 ) => {
   const response = await fetch(
-    `https://api.themoviedb.org/3/search/${media_type}?query=${encodeURIComponent(
+    `${baseUrl}/search/${media_type}?query=${encodeURIComponent(
       query,
     )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
   );
@@ -54,7 +55,7 @@ export const searchFilmByName = async (
 
 export async function searchContent(query: string) {
   const response = await fetch(
-    `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(
+    `${baseUrl}/search/multi?query=${encodeURIComponent(
       query,
     )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
   );
@@ -212,7 +213,7 @@ export const fetchFilms = cache(
         discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${process.env.TMDB_API_KEY}&page=`;
       }
       const urls = Array.from(
-        { length: 20 },
+        { length: 30 },
         (_, i) => `${discoverUrl}${i + 1}`,
       );
 
@@ -312,7 +313,7 @@ export const fetchContent = cache(
       const urls = Array.from(
         { length: seasons },
         (_, i) =>
-          `https://api.themoviedb.org/3/tv/${tmdbId}/season/${i + 1}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+          `${baseUrl}/tv/${tmdbId}/season/${i + 1}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
       );
       try {
         for (let i = 0; i < urls.length; i++) {
@@ -449,4 +450,75 @@ export const searchFilm = cache(
       return;
     }
   },
+);
+
+export const fetchFilmGenres = cache(
+  async (mediaType: "movie" | "tv" = "movie") => {
+    try {
+      const EXCLUDED_GENRE_IDS: number[] = [16, 10763, 10767];
+
+      const response = await fetch(
+        `${baseUrl}/genre/${mediaType}/list?language=en&api_key=${process.env.TMDB_API_KEY}`,
+      );
+
+      const { genres: genreObjects } = await response.json();
+
+      const filteredGenres = genreObjects.filter(
+        (genre: { id: number; name: string }) =>
+          !EXCLUDED_GENRE_IDS.includes(genre.id),
+      );
+
+      const genres = filteredGenres.map(
+        (genre: { name: string }) => genre.name,
+      );
+
+      return genres ?? [];
+    } catch (error) {
+      console.log(`An error occurred while fetching genres, ${error}`);
+      return [];
+    }
+  },
+);
+
+export const fetchSectionFilms = unstable_cache(
+  async () => {
+    const [moviesData, seriesData, kidsData] = await Promise.all([
+      fetchFilms("movie"),
+      fetchFilms("tv"),
+      fetchFilms("kids"),
+    ]);
+    let movies = moviesData.allFilms.slice(0, 7);
+    movies = movies.map((movie) => {
+      return {
+        tmdbId: movie.id,
+        contentType: "movie",
+        title: movie.title,
+        posterImage: posterURL(movie.poster_path),
+      };
+    });
+    let series = seriesData.allFilms.slice(0, 7);
+    series = series.map((film) => {
+      return {
+        tmdbId: film.id,
+        contentType: "tv",
+        title: film.name,
+        posterImage: posterURL(film.poster_path),
+      };
+    });
+
+    let kids = kidsData.allFilms.slice(0, 7);
+    kids = kids.map((movie) => {
+      return {
+        tmdbId: movie.id,
+        contentType: "kids",
+        title: movie.title,
+        posterImage: posterURL(movie.poster_path),
+      };
+    });
+    const allFilms = [...movies, ...series, ...kids];
+
+    return allFilms;
+  },
+  ["section_films"],
+  { revalidate: 60 * 60 * 60 },
 );

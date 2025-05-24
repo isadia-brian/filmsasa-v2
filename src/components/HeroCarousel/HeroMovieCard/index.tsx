@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Heart, Play } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
-import { usePathname } from "next/navigation";
-import { AddToFavorites } from "@/features/users/server/db";
+import { addToUserList } from "@/features/users/server/db";
 import { useToast } from "@/hooks/use-toast";
+import { FilmData } from "@/types/films";
 
 type Proptype = {
   film: any;
@@ -21,6 +21,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
     title,
     backdropImage,
     genres,
+    mediaType,
     tmdbId,
     contentType,
     overview,
@@ -29,7 +30,6 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
   } = film;
 
   const [loading, setLoading] = useState<boolean>(false);
-  const pathname = usePathname();
   const { toast } = useToast();
 
   // Optimized with useCallback to prevent recreation on re-renders
@@ -42,7 +42,16 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
       } else {
         try {
           setLoading(true);
-          const response = await AddToFavorites(userId, tmdbId, pathname);
+          const film: FilmData = {
+            title,
+            mediaType,
+          };
+          const response = await addToUserList(
+            userId,
+            tmdbId,
+            "favorites",
+            film,
+          );
           const { success, message } = response;
 
           toast({
@@ -58,7 +67,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
         }
       }
     },
-    [loading, pathname, toast],
+    [loading, toast],
   );
 
   return (
@@ -75,9 +84,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
         "
         className={`object-cover object-center md:object-top`}
         priority={priorityLoad}
-        // Added loading strategy based on priority
         loading={priorityLoad ? "eager" : "lazy"}
-        // Added fetchpriority attribute for better resource allocation
         fetchPriority={priorityLoad ? "high" : "auto"}
       />
 
