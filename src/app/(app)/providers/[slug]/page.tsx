@@ -49,7 +49,7 @@ const page = async (props: { searchParams: SearchParams; params: params }) => {
     },
   ];
 
-  let categoryType: string = "";
+  let categoryType: string = "movies";
 
   switch (media_type) {
     case "movies":
