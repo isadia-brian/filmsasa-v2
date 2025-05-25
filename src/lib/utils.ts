@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function posterURL(poster_path: string | null) {
-  return `https://image.tmdb.org/t/p/w500${poster_path}`;
+  return `https://image.tmdb.org/t/p/w342${poster_path}`;
 }
 export function smallPosterURL(poster_path: string | null) {
   return `https://image.tmdb.org/t/p/w185${poster_path}`;
@@ -96,7 +96,7 @@ export const convertFilms = cache((films: DrizzleFilm[]) => {
     ...film,
     backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
     posterImage: bufferToDataURL(film.posterImage as Uint8Array),
-    genres: JSON.parse(film.genres) as string[],
+    genres: JSON.parse(film.genres as any),
   }));
 
   return filmsWithDataUrl;

@@ -66,7 +66,7 @@ const PaginatedFilms = ({
                     className="object-cover rounded-md"
                     quality={75}
                     priority={index < 6 ? true : false}
-                    loading={index > 24 ? "lazy" : "eager"}
+                    loading={index >= 6 ? "lazy" : "eager"}
                   />
                 </div>
                 <div className="flex flex-col space-y-2">
