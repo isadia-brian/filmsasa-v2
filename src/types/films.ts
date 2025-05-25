@@ -54,3 +54,15 @@ export interface FilmData {
   year?: number;
   rating?: number;
 }
+
+export interface TMDBFilmData {
+  tmdbId: number;
+  title: string;
+  poster_path: string;
+  backdrop_path: string;
+  mediaType: "movie" | "tv";
+  year: number;
+  rating: number;
+  genres: string[];
+  overview: string;
+}

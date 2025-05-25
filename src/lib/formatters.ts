@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 export const convertMinutes = (runtimeInMinutes: number) => {
   const hours = Math.floor(runtimeInMinutes / 60);
   const minutes = runtimeInMinutes % 60;
@@ -14,3 +16,14 @@ export const convertMinutes = (runtimeInMinutes: number) => {
 
   return runtime;
 };
+
+export const convertYear = cache((tmdbDate: string) => {
+  let year: number | null = null;
+
+  if (typeof tmdbDate === "string") {
+    year = tmdbDate.split("-")[0];
+    year = parseInt(year);
+  }
+
+  return year;
+});

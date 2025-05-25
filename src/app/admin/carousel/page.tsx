@@ -2,11 +2,10 @@ import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
-//import { carouselFilms } from "@/data/carousel";
 import Image from "next/image";
 import DeleteBtn from "../_components/FeaturedFilms/DeleteBtn";
 import { fetchCarouselFilms } from "@/features/films/server/db/films";
-import { bufferToDataURL } from "@/lib/utils";
+import { convertFilms } from "@/lib/utils";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -17,12 +16,7 @@ export default async function Page(props: {
   //const query = searchParams?.query ?? "";
 
   const { films } = await fetchCarouselFilms();
-
-  const filmsWithDataUrls = films?.map((film) => ({
-    ...film,
-    backdropImage: bufferToDataURL(film.backdropImage),
-    posterImage: bufferToDataURL(film.posterImage),
-  }));
+  const filmsWithDataUrls = convertFilms(films);
 
   return (
     <SidebarInset>
@@ -42,12 +36,12 @@ export default async function Page(props: {
               >
                 <div className=" h-[260px] w-full relative rounded">
                   <Image
-                    src={film.backdropImage}
+                    src={film.posterImage}
                     fill
                     className="object-cover rounded"
                     alt={film.title}
                     placeholder="blur"
-                    blurDataURL={film.backdropImage}
+                    blurDataURL={film.posterImage}
                   />
                   <DeleteBtn tmdbId={film.tmdbId} />
                 </div>

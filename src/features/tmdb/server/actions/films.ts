@@ -3,7 +3,7 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { TMDBFilm } from "@/types/films";
-import { convertMinutes } from "@/lib/formatters";
+import { convertMinutes, convertYear } from "@/lib/formatters";
 import { posterURL } from "@/lib/utils";
 
 const baseUrl: string = `https://api.themoviedb.org/3`;
@@ -71,10 +71,10 @@ export async function searchContent(query: string) {
     }: {
       id: string;
       poster_path: string;
-      name: string;
+      name?: string;
+      title?: string;
       media_type: string;
-      profile_path: string;
-      title: string;
+      profile_path?: string;
     }) => ({
       id,
       poster_path,
@@ -86,17 +86,21 @@ export async function searchContent(query: string) {
   );
 }
 
-export const fetchTrending = cache(
+export const fetchFeatured = cache(
   async (mediaType: "movie" | "tv", page: number) => {
-    const trendingUrl = `${baseUrl}/trending/${mediaType}/week?language=en-US&page=${page}&api_key=${process.env.TMDB_API_KEY}`;
-
     try {
-      const response = await fetch(trendingUrl);
+      let url: string = "";
+
+      if (mediaType === "movie") {
+        url = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&page=${page}&sort_by=popularity.desc&with_original_language=en&api_key=${process.env.TMDB_API_KEY}`;
+      } else {
+        url = `${baseUrl}/discover/tv?first_air_date.gte=2020-01-01&include_adult=false&include_null_first_air_dates=false&language=en-US&page=${page}&sort_by=popularity.desc&watch_region=US&with_original_language=en&without_genres=10767%2C10763%2C10764%2C99%2C10762&api_key=${process.env.TMDB_API_KEY}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) {
         console.error(`HTTP ${response.status} - ${response.statusText}`);
         return;
       }
-
       const { results } = await response.json();
       if (!results) return;
 
@@ -104,42 +108,52 @@ export const fetchTrending = cache(
         .map(
           ({
             id,
-            media_type,
             poster_path,
+            backdrop_path,
             title,
+            release_date,
+            first_air_date,
+            overview,
             name,
-            original_language,
             vote_average,
+            genre_ids = [],
           }: {
-            id: string;
+            id: number;
             poster_path: string;
-            media_type: string;
-            title: string;
-            name: string;
-            original_language: string;
+            title?: string;
+            name?: string;
+            overview: string;
+            backdrop_path: string;
+            release_date?: string;
+            first_air_date?: string;
             vote_average: number;
+            genre_ids?: number[];
           }) => ({
-            id,
+            tmdbId: id,
+            title: typeof title === "string" ? title : name,
             poster_path,
-            title,
-            name,
-            media_type,
-            original_language,
+            backdrop_path,
+            mediaType,
+            year:
+              typeof release_date === "string"
+                ? convertYear(release_date)
+                : typeof first_air_date === "string"
+                  ? convertYear(first_air_date)
+                  : 0,
             vote_average,
+            rating: Math.round(vote_average * 10) / 10,
+            genres: genre_ids
+              .map((id) => genreMap.get(id)) //convert id to name
+              .filter((name): name is string => name !== undefined),
+            overview,
           }),
         )
         .filter(
-          ({
-            original_language,
-            vote_average,
-          }: {
-            original_language: string;
-            vote_average: number;
-          }) => original_language === "en" && vote_average >= 5,
+          ({ vote_average }: { vote_average: number }) => vote_average >= 5,
         );
     } catch (error) {
-      console.error(error);
-      throw new Error("An error occured while fetching");
+      console.log(`An error occurred on the server: ${error}`);
+      return;
     }
   },
 );
@@ -163,39 +177,53 @@ export const fetchPopular = cache(
           ({
             id,
             poster_path,
+            backdrop_path,
             title,
+            release_date,
+            first_air_date,
+            overview,
             name,
-            original_language,
             vote_average,
+            genre_ids = [],
           }: {
-            id: string;
+            id: number;
             poster_path: string;
-            title: string;
-            name: string;
-            original_language: string;
+            title?: string;
+            name?: string;
+            overview: string;
+            backdrop_path: string;
+            release_date?: string;
+            first_air_date?: string;
             vote_average: number;
+            genre_ids?: number[];
           }) => ({
-            id,
+            tmdbId: id,
+            title: typeof title === "string" ? title : name,
             poster_path,
-            title,
-            name,
-            media_type: mediaType,
-            original_language,
+            backdrop_path,
+            mediaType,
+            release_date,
+            first_air_date,
+            year:
+              typeof release_date === "string"
+                ? convertYear(release_date)
+                : typeof first_air_date === "string"
+                  ? convertYear(first_air_date)
+                  : 0,
             vote_average,
+            rating: Math.round(vote_average * 10) / 10,
+            genres: genre_ids
+              .map((id) => genreMap.get(id)) //convert id to name
+              .filter((name): name is string => name !== undefined),
+            overview,
           }),
         )
         .filter(
-          ({
-            original_language,
-            vote_average,
-          }: {
-            original_language: string;
-            vote_average: number;
-          }) => original_language === "en" && vote_average >= 5,
+          ({ vote_average }: { vote_average: number }) => vote_average >= 5,
         );
     } catch (error) {
       console.error(error);
-      throw new Error("An error occured while fetching");
+      return;
     }
   },
 );
@@ -522,3 +550,90 @@ export const fetchSectionFilms = unstable_cache(
   ["section_films"],
   { revalidate: 60 * 60 * 60 },
 );
+
+const genres = [
+  {
+    id: 28,
+    name: "Action",
+  },
+  {
+    id: 12,
+    name: "Adventure",
+  },
+
+  {
+    id: 28,
+    name: "Action",
+  },
+  {
+    id: 12,
+    name: "Adventure",
+  },
+
+  {
+    id: 10759,
+    name: "Action & Adventure",
+  },
+  {
+    id: 35,
+    name: "Comedy",
+  },
+  {
+    id: 80,
+    name: "Crime",
+  },
+  {
+    id: 27,
+    name: "Horror",
+  },
+  {
+    id: 10402,
+    name: "Music",
+  },
+  {
+    id: 18,
+    name: "Drama",
+  },
+  {
+    id: 10751,
+    name: "Family",
+  },
+  {
+    id: 10749,
+    name: "Romance",
+  },
+  {
+    id: 878,
+    name: "Science Fiction",
+  },
+  {
+    id: 10770,
+    name: "TV Movie",
+  },
+  {
+    id: 53,
+    name: "Thriller",
+  },
+  {
+    id: 9648,
+    name: "Mystery",
+  },
+  {
+    id: 10765,
+    name: "Sci-Fi & Fantasy",
+  },
+  {
+    id: 10766,
+    name: "Soap",
+  },
+  {
+    id: 37,
+    name: "Western",
+  },
+];
+
+// Map for genre ID to name lookup
+const genreMap = new Map<number, string>();
+genres.forEach((genre) => {
+  genreMap.set(genre.id, genre.name);
+});

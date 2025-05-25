@@ -7,6 +7,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { convertMinutes } from "@/lib/formatters";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { TMDBFilmData } from "@/types/films";
 
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(
@@ -444,7 +445,12 @@ async function fetchTmdbData(tmdbId: number, mediaType: "movie" | "tv") {
     throw new Error(`TMDB API Error: ${response.statusText}`);
   }
 
-  return response.json();
+  const { runtime, number_of_seasons } = await response.json();
+
+  return {
+    runtime,
+    number_of_seasons,
+  };
 }
 
 async function fetchTmdbImage(imagePath: string, width: string) {
@@ -464,46 +470,47 @@ async function fetchTmdbImage(imagePath: string, width: string) {
 }
 
 export async function insertFilmFromTmdb(
-  tmdbId: number,
+  tmdbFilm: TMDBFilmData,
   category: string,
-  mediaType: "movie" | "tv" = "movie",
 ): Promise<{
-  film: Film;
   message: string;
   action: "none" | "category_added" | "film_created";
 }> {
   try {
     // 1. Fetch TMDB data
-    const tmdbData = await fetchTmdbData(tmdbId, mediaType);
+    const tmdbData = await fetchTmdbData(tmdbFilm.tmdbId, tmdbFilm.mediaType);
 
     // 2. Validate required image paths
-    if (!tmdbData.poster_path) {
+    if (!tmdbFilm.poster_path) {
       throw new Error("TMDB poster path is missing");
     }
-    if (!tmdbData.backdrop_path) {
+    if (!tmdbFilm.backdrop_path) {
       throw new Error("TMDB backdrop path is missing");
     }
 
     // 3. Fetch images with specified dimensions
     const [posterBlob, backdropBlob] = await Promise.all([
-      fetchTmdbImage(tmdbData.poster_path, "w500"), // Poster width 500px
-      fetchTmdbImage(tmdbData.backdrop_path, "w1280"), // Backdrop width 1280px
+      fetchTmdbImage(tmdbFilm.poster_path, "w500"), // Poster width 500px
+      fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"), // Backdrop width 1280px
     ]);
 
     // 4. Prepare film data
     const filmData: InsertFilm = {
-      tmdbId,
-      title: tmdbData.title || tmdbData.name,
-      overview: tmdbData.overview,
-      contentType: mediaType === "movie" ? "movie" : "tv",
-      mediaType: mediaType,
-      genres: JSON.stringify(tmdbData.genres.map((g) => g.name)),
-      year: getReleaseYear(tmdbData, mediaType),
+      tmdbId: tmdbFilm.tmdbId,
+      title: tmdbFilm.title,
+      overview: tmdbFilm.overview,
+      contentType: tmdbFilm.mediaType,
+      mediaType: tmdbFilm.mediaType,
+      genres: JSON.stringify(tmdbFilm.genres.map((g) => g)),
+      year: tmdbFilm.year,
       posterImage: posterBlob,
       backdropImage: backdropBlob,
-      rating: Math.round(tmdbData.vote_average * 10),
-      seasons: mediaType === "tv" ? tmdbData.number_of_seasons : null,
-      runtime: mediaType === "movie" ? convertMinutes(tmdbData.runtime) : null,
+      rating: tmdbFilm.rating,
+      seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
+      runtime:
+        tmdbFilm.mediaType === "movie"
+          ? convertMinutes(tmdbData.runtime)
+          : null,
       quality: "HD",
     };
 
@@ -512,7 +519,7 @@ export async function insertFilmFromTmdb(
       // Check for existing film
       // Check for existing film
       const existingFilm = await tx.query.films.findFirst({
-        where: eq(films.tmdbId, tmdbId),
+        where: eq(films.tmdbId, tmdbFilm.tmdbId),
       });
 
       if (existingFilm) {
@@ -564,7 +571,6 @@ export async function insertFilmFromTmdb(
       revalidatePath("/");
       revalidatePath(`/admin/${category}`);
       return {
-        film: insertedFilm,
         message: "New film created with category",
         action: "film_created",
       };
@@ -574,11 +580,4 @@ export async function insertFilmFromTmdb(
       `Film insertion failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
-}
-
-// Helper functions
-function getReleaseYear(data: any, mediaType: string): number {
-  const dateString =
-    mediaType === "movie" ? data.release_date : data.first_air_date;
-  return parseInt(dateString?.split("-")[0] || new Date().getFullYear());
 }

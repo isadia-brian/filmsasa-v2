@@ -2,22 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import {
+  fetchFeatured,
   fetchPopular,
-  fetchTrending,
 } from "@/features/tmdb/server/actions/films";
 import { posterURL } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { insertFilmFromTmdb } from "@/features/films/server/db/films";
-
-type Film = {
-  poster_path: string;
-  id: number;
-  title: string;
-  name: string;
-  vote_average: number;
-};
+import { TMDBFilmData } from "@/types/films";
 
 const FeaturedFilms = ({
   title,
@@ -26,7 +19,7 @@ const FeaturedFilms = ({
   title?: string;
   category: string;
 }) => {
-  const [films, setFilms] = useState<Film[]>([]);
+  const [films, setFilms] = useState<TMDBFilmData[]>([]);
   const [page, setPage] = useState<number>(1);
   const [mediaType, setMediaType] = useState<"movie" | "tv">("movie");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +34,9 @@ const FeaturedFilms = ({
         if (category === "popular") {
           data = await fetchPopular(content, currentPage);
         } else {
-          data = await fetchTrending(content, currentPage);
+          data = await fetchFeatured(content, currentPage);
+
+          console.log(data);
         }
 
         if (!data) {
@@ -61,12 +56,8 @@ const FeaturedFilms = ({
     [isLoading, mediaType, films, page],
   );
 
-  const PostToCategory = async (
-    category: string,
-    filmId: number,
-    mediaType: "movie" | "tv",
-  ) => {
-    const result = await insertFilmFromTmdb(filmId, category, mediaType);
+  const PostToCategory = async (category: string, tmdbFilm: TMDBFilmData) => {
+    const result = await insertFilmFromTmdb(tmdbFilm, category);
 
     if (result.action === "none") {
       toast({
@@ -131,7 +122,7 @@ const FeaturedFilms = ({
           <ul className="grid md:grid-cols-6 gap-2 relative">
             {films.map((film) => (
               <li
-                key={film.id}
+                key={film.tmdbId}
                 className="relative flex flex-col items-start gap-0.5"
               >
                 <div className="h-[260px] w-full relative rounded">
@@ -139,17 +130,17 @@ const FeaturedFilms = ({
                     src={posterURL(film.poster_path)}
                     fill
                     className="object-cover rounded"
-                    alt={film?.title || film.name}
+                    alt={film.title}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   <div className="absolute right-1.5 top-1.5 px-2 py-2 w-10 bg-red-500 text-white rounded-md flex items-center justify-center">
-                    <p>{Math.round(film.vote_average * 10) / 10}</p>
+                    <p>{film.rating}</p>
                   </div>
                 </div>
                 <Button
                   className="cursor-pointer"
                   disabled={isLoading}
-                  onClick={() => PostToCategory(category, film.id, mediaType)}
+                  onClick={() => PostToCategory(category, film)}
                 >
                   Add to {category}
                 </Button>
