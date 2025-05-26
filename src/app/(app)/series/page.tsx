@@ -15,19 +15,20 @@ const Series = async (props: {
   let currentPage = Number(searchParams?.page) || 1;
   let pageSize = 24;
 
-  let { allFilms: series, totalCount } = await fetchFilms("tv");
+  let { data: series, totalCount } = await fetchFilms("tv");
+  let films = series || [];
 
   const firstItemIndex = (currentPage - 1) * pageSize;
   const lastItemIndex = firstItemIndex + pageSize;
-  let currentFilms = series?.slice(firstItemIndex, lastItemIndex);
+  let currentFilms = films?.slice(firstItemIndex, lastItemIndex);
 
   const query = searchParams?.query || "";
 
   if (query) {
-    const data = await searchFilmByName("tv", query.toLowerCase());
-    currentFilms = data;
+    const searchedFilm = await searchFilmByName("tv", query.toLowerCase());
+    currentFilms = searchedFilm;
     pageSize = 0;
-    totalCount = series.length;
+    totalCount = searchedFilm.length;
   }
 
   return (

@@ -35,8 +35,6 @@ const FeaturedFilms = ({
           data = await fetchPopular(content, currentPage);
         } else {
           data = await fetchFeatured(content, currentPage);
-
-          console.log(data);
         }
 
         if (!data) {

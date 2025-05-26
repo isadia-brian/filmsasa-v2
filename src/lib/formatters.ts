@@ -18,11 +18,10 @@ export const convertMinutes = (runtimeInMinutes: number) => {
 };
 
 export const convertYear = cache((tmdbDate: string) => {
-  let year: number | null = null;
+  let year: number = 0;
 
   if (typeof tmdbDate === "string") {
-    year = tmdbDate.split("-")[0];
-    year = parseInt(year);
+    year = parseInt(tmdbDate.split("-")[0]);
   }
 
   return year;

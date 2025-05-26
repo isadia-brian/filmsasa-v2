@@ -5,8 +5,8 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
-import Image from "next/image";
-import { bufferToDataURL, posterURL } from "@/lib/utils";
+import { convertFilms } from "@/lib/utils";
+import FilmGrid from "../_components/FeaturedFilms/FilmGrid";
 
 const page = async (props: {
   searchParams?: Promise<{
@@ -18,11 +18,7 @@ const page = async (props: {
 
   const { films } = await fetchPopular();
 
-  const filmsWithDataUrls = films?.map((film) => ({
-    ...film,
-    backdropImage: bufferToDataURL(film.backdropImage),
-    posterImage: bufferToDataURL(film.posterImage),
-  }));
+  const filmsWithDataUrls = convertFilms(films);
 
   let popularFilm = filmsWithDataUrls || [];
 
@@ -43,29 +39,7 @@ const page = async (props: {
                 <FeaturedFilms title="Add to popular" category="popular" />
               </Modal>
             </div>
-            <ul className="grid md:grid-cols-6 gap-2 relative">
-              {popularFilm?.map((film, index) => (
-                <li
-                  key={index}
-                  className="relative flex flex-col items-start gap-0.5"
-                >
-                  <div className=" h-[260px] w-full relative rounded">
-                    <Image
-                      src={film.posterImage || "/placeholder.webp"}
-                      fill
-                      placeholder="blur"
-                      blurDataURL={film.posterImage}
-                      className="object-cover rounded"
-                      alt={film.title}
-                    />
-                    {/*<DeleteBtn tmdbId={film.tmdbId} />*/}
-                  </div>
-                  <p className="text-sm font-medium line-clamp-1">
-                    {film.title}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <FilmGrid films={popularFilm} category="popular" />
           </div>
         </div>
       </SidebarInset>

@@ -7,6 +7,7 @@ import { convertMinutes, convertYear } from "@/lib/formatters";
 import { posterURL } from "@/lib/utils";
 
 const baseUrl: string = `https://api.themoviedb.org/3`;
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 export const searchFilmByName = async (
   media_type: "movie" | "tv",
@@ -15,7 +16,7 @@ export const searchFilmByName = async (
   const response = await fetch(
     `${baseUrl}/search/${media_type}?query=${encodeURIComponent(
       query,
-    )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+    )}&include_adult=false&language=en-US&page=1&api_key=${TMDB_API_KEY}`,
   );
 
   const { results } = await response.json();
@@ -57,7 +58,7 @@ export async function searchContent(query: string) {
   const response = await fetch(
     `${baseUrl}/search/multi?query=${encodeURIComponent(
       query,
-    )}&include_adult=false&language=en-US&page=1&api_key=${process.env.TMDB_API_KEY}`,
+    )}&include_adult=false&language=en-US&page=1&api_key=${TMDB_API_KEY}`,
   );
   const { results } = await response.json();
   return results.map(
@@ -92,9 +93,9 @@ export const fetchFeatured = cache(
       let url: string = "";
 
       if (mediaType === "movie") {
-        url = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&page=${page}&sort_by=popularity.desc&with_original_language=en&api_key=${process.env.TMDB_API_KEY}`;
+        url = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&page=${page}&sort_by=popularity.desc&with_original_language=en&api_key=${TMDB_API_KEY}`;
       } else {
-        url = `${baseUrl}/discover/tv?first_air_date.gte=2020-01-01&include_adult=false&include_null_first_air_dates=false&language=en-US&page=${page}&sort_by=popularity.desc&watch_region=US&with_original_language=en&without_genres=10767%2C10763%2C10764%2C99%2C10762&api_key=${process.env.TMDB_API_KEY}`;
+        url = `${baseUrl}/discover/tv?first_air_date.gte=2020-01-01&include_adult=false&include_null_first_air_dates=false&language=en-US&page=${page}&sort_by=popularity.desc&watch_region=US&with_original_language=en&without_genres=10767%2C10763%2C10764%2C99%2C10762&api_key=${TMDB_API_KEY}`;
       }
       const response = await fetch(url);
       if (!response.ok) {
@@ -160,7 +161,7 @@ export const fetchFeatured = cache(
 
 export const fetchPopular = cache(
   async (mediaType: "movie" | "tv", page: number) => {
-    const popularUrl = `${baseUrl}/${mediaType}/popular?language=en-US&page=${page}&api_key=${process.env.TMDB_API_KEY}`;
+    const popularUrl = `${baseUrl}/${mediaType}/popular?language=en-US&page=${page}&api_key=${TMDB_API_KEY}`;
 
     try {
       const response = await fetch(popularUrl);
@@ -234,12 +235,70 @@ export const fetchFilms = cache(
       let allFilms = [];
       let discoverUrl = "";
       if (media_type === "movie") {
-        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&vote_average.gte=4&with_origin_country=US&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${process.env.TMDB_API_KEY}&page=`;
+        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&vote_average.gte=4&with_origin_country=US&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${TMDB_API_KEY}&page=`;
       } else if (media_type === "tv") {
-        discoverUrl = `${baseUrl}/discover/tv?include_adult=false&include_video=false&language=en-US&watch_region=US&first_air_date.gte=2020-01-01&sort_by=popularity.desc&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${process.env.TMDB_API_KEY}&page=`;
+        discoverUrl = `${baseUrl}/discover/tv?include_adult=false&include_video=false&language=en-US&watch_region=US&first_air_date.gte=2020-01-01&sort_by=popularity.desc&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${TMDB_API_KEY}&page=`;
       } else {
-        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${process.env.TMDB_API_KEY}&page=`;
+        discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${TMDB_API_KEY}&page=`;
       }
+      const urls = Array.from(
+        { length: 10 },
+        (_, i) => `${discoverUrl}${i + 1}`,
+      );
+
+      try {
+        const pages = await Promise.all(
+          urls.map((url) =>
+            fetch(url)
+              .then((res) => res.json())
+              .catch((error) => {
+                console.error("Fetch error:", error);
+                return { results: [] };
+              }),
+          ),
+        );
+
+        allFilms = pages.flatMap((page) => page.results);
+        const data = allFilms
+          .map((film) => {
+            return {
+              id: film.id,
+              title: film.title || film.name,
+              poster_path: film.poster_path,
+              year:
+                typeof film.release_date === "string"
+                  ? convertYear(film.release_date)
+                  : typeof film.first_air_date === "string"
+                    ? convertYear(film.first_air_date)
+                    : 0,
+              vote_average: Math.round(film.vote_average),
+            };
+          })
+          .filter((film) => film.year < 2026);
+
+        return {
+          data,
+          totalCount: allFilms.length,
+        };
+      } catch (error) {
+        console.error("Global error:", error);
+        return { allFilms: [], totalCount: 0 };
+      }
+    },
+    ["tmdb-provider-data"],
+    {
+      tags: ["tmdb-data"],
+      revalidate: 3600,
+    },
+  ),
+);
+
+export const fetchProvider = cache(
+  unstable_cache(
+    async (media_type: string, watch_provider: string) => {
+      let allFilms: TMDBFilm[] = [];
+      const discoverUrl = `${baseUrl}/discover/${media_type}?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&with_watch_providers=${watch_provider}&api_key=${TMDB_API_KEY}&page=`;
+
       const urls = Array.from(
         { length: 10 },
         (_, i) => `${discoverUrl}${i + 1}`,
@@ -276,52 +335,10 @@ export const fetchFilms = cache(
   ),
 );
 
-export const fetchProvider = cache(
-  unstable_cache(
-    async (media_type: string, watch_provider: string) => {
-      let allFilms: TMDBFilm[] = [];
-      const discoverUrl = `${baseUrl}/discover/${media_type}?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&with_watch_providers=${watch_provider}&api_key=${process.env.TMDB_API_KEY}&page=`;
-
-      const urls = Array.from(
-        { length: 10 },
-        (_, i) => `${discoverUrl}${i + 1}`,
-      );
-
-      try {
-        const pages = await Promise.all(
-          urls.map((url) =>
-            fetch(url, { next: { tags: ["tmdb-data"] } })
-              .then((res) => res.json())
-              .catch((error) => {
-                console.error("Fetch error:", error);
-                return { results: [] };
-              }),
-          ),
-        );
-
-        allFilms = pages.flatMap((page) => page.results);
-
-        return {
-          allFilms,
-          totalCount: allFilms.length,
-        };
-      } catch (error) {
-        console.error("Global error:", error);
-        return { allFilms: [], totalCount: 0 };
-      }
-    },
-    ["tmdb-provider-data"],
-    {
-      tags: ["tmdb-data"],
-      revalidate: 3600,
-    },
-  ),
-);
-
 export const fetchContent = cache(
   async (tmdbId: number, media_type: string) => {
     const res = await fetch(
-      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,similar,videos&api_key=${process.env.TMDB_API_KEY}`,
+      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,similar,videos&api_key=${TMDB_API_KEY}`,
       {
         cache: "force-cache",
       },
@@ -341,7 +358,7 @@ export const fetchContent = cache(
       const urls = Array.from(
         { length: seasons },
         (_, i) =>
-          `${baseUrl}/tv/${tmdbId}/season/${i + 1}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
+          `${baseUrl}/tv/${tmdbId}/season/${i + 1}?language=en-US&api_key=${TMDB_API_KEY}`,
       );
       try {
         for (let i = 0; i < urls.length; i++) {
@@ -418,7 +435,7 @@ export const fetchContent = cache(
 
 export const searchFilm = cache(
   async (media_type: "movie" | "tv", filmId: number) => {
-    const url = `${baseUrl}/${media_type}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`;
+    const url = `${baseUrl}/${media_type}/${filmId}?language=en-US&api_key=${TMDB_API_KEY}`;
 
     try {
       const response = await fetch(url);
@@ -486,7 +503,7 @@ export const fetchFilmGenres = cache(
       const EXCLUDED_GENRE_IDS: number[] = [16, 10763, 10767];
 
       const response = await fetch(
-        `${baseUrl}/genre/${mediaType}/list?language=en&api_key=${process.env.TMDB_API_KEY}`,
+        `${baseUrl}/genre/${mediaType}/list?language=en&api_key=${TMDB_API_KEY}`,
       );
 
       const { genres: genreObjects } = await response.json();
@@ -508,41 +525,66 @@ export const fetchFilmGenres = cache(
   },
 );
 
+export const fetchLandingFilms = cache(
+  async (media_type: "movie" | "tv" | "kids") => {
+    let discoverUrl = "";
+    if (media_type === "movie") {
+      discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&watch_region=US&vote_average.gte=4&with_origin_country=US&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${TMDB_API_KEY}&page=1`;
+    } else if (media_type === "tv") {
+      discoverUrl = `${baseUrl}/discover/tv?include_adult=false&include_video=false&language=en-US&watch_region=US&first_air_date.gte=2020-01-01&sort_by=popularity.desc&with_original_language=en&without_genres=16%2C10763%2C10767&api_key=${TMDB_API_KEY}&page=1`;
+    } else {
+      discoverUrl = `${baseUrl}/discover/movie?include_adult=false&include_video=false&language=en-US&region=US&sort_by=popularity.desc&with_genres=16%2C10751&with_original_language=en&without_genres=10749%2C27%2C36%2C80%2C99%2C36%2C53%2C37&api_key=${TMDB_API_KEY}&page=1`;
+    }
+
+    try {
+      const response = await fetch(discoverUrl);
+      if (!response.ok) {
+        console.log("Failed to get data from TMDB");
+        return;
+      }
+      const { results } = await response.json();
+      let data = results.slice(0, 7);
+      data = data.map(
+        (film: {
+          id: number;
+          title?: string;
+          poster_path: string;
+          name?: string;
+          release_date?: string;
+          first_air_date?: string;
+        }) => {
+          return {
+            tmdbId: film.id,
+            title: film.title || film.name,
+            posterImage: posterURL(film.poster_path),
+            contentType: media_type,
+            year:
+              typeof film.release_date === "string"
+                ? convertYear(film.release_date)
+                : typeof film.first_air_date === "string"
+                  ? convertYear(film.first_air_date)
+                  : 0,
+          };
+        },
+      );
+      return data;
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+  },
+);
+
 export const fetchSectionFilms = unstable_cache(
   async () => {
-    const [moviesData, seriesData, kidsData] = await Promise.all([
-      fetchFilms("movie"),
-      fetchFilms("tv"),
-      fetchFilms("kids"),
+    const [movies, series, kidsData] = await Promise.all([
+      fetchLandingFilms("movie"),
+      fetchLandingFilms("tv"),
+      fetchLandingFilms("kids"),
     ]);
-    let movies = moviesData.allFilms.slice(0, 7);
-    movies = movies.map((movie) => {
-      return {
-        tmdbId: movie.id,
-        contentType: "movie",
-        title: movie.title,
-        posterImage: posterURL(movie.poster_path),
-      };
-    });
-    let series = seriesData.allFilms.slice(0, 7);
-    series = series.map((film) => {
-      return {
-        tmdbId: film.id,
-        contentType: "tv",
-        title: film.name,
-        posterImage: posterURL(film.poster_path),
-      };
-    });
-
-    let kids = kidsData.allFilms.slice(0, 7);
-    kids = kids.map((movie) => {
-      return {
-        tmdbId: movie.id,
-        contentType: "kids",
-        title: movie.title,
-        posterImage: posterURL(movie.poster_path),
-      };
-    });
+    const kids = kidsData.sort(
+      (a: { year: number }, b: { year: number }) => b.year - a.year,
+    );
     const allFilms = [...movies, ...series, ...kids];
 
     return allFilms;

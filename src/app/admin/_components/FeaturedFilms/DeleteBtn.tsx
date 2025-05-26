@@ -1,13 +1,33 @@
 "use client";
 
-import { deleteFromCarousel } from "@/features/films/server/db/films";
+import { removeCategory } from "@/features/films/server/db/films";
 import { X } from "lucide-react";
 import { useCallback } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-const DeleteBtn = ({ tmdbId }: { tmdbId: number }) => {
+const DeleteBtn = ({
+  tmdbId,
+  category,
+}: {
+  tmdbId: number;
+  category: string;
+}) => {
+  const { toast } = useToast();
   const handleDelete = useCallback(async () => {
-    await deleteFromCarousel(tmdbId);
-  }, []);
+    const response = await removeCategory(tmdbId, category);
+    if (response.success) {
+      toast({
+        title: "Success",
+        description: response.message,
+      });
+    } else {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: response.message,
+      });
+    }
+  }, [toast]);
 
   return (
     <button

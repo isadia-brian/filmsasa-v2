@@ -74,18 +74,14 @@ const PaginatedFilms = ({
                     {item.title || item.name}
                   </p>
                   <div className="flex items-center justify-between text-white font-medium">
-                    <p className={`text-[11px] leading-4`}>
-                      {parseInt(item.release_date?.split("-")[0]) ||
-                        parseInt(item.first_air_date?.split("-")[0]) ||
-                        item.year}
-                    </p>
+                    <p className={`text-[11px] leading-4`}>{item.year}</p>
                     <div className="flex items-center gap-2">
                       <Heart className="h-[13px] w-[13px]" />
 
                       <div className="flex items-center gap-1">
                         <Star className="h-[13px] w-[13px]" fill="yellow" />
                         <p className={`text-[11px] leading-4"`}>
-                          {Math.round(item.vote_average)}
+                          {item.vote_average}
                         </p>
                       </div>
                     </div>

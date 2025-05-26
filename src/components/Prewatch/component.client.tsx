@@ -90,6 +90,13 @@ const PrewatchClient = (props: {
     duration = seasons === 1 ? "1 season" : `${seasons} seasons`;
   }
 
+  const firstThreeGenres = genres.slice(0, 3);
+
+  const genresText =
+    firstThreeGenres.length > 1
+      ? firstThreeGenres.join(" - ")
+      : firstThreeGenres[0] || "";
+
   return (
     <div
       className={`relative w-full ${
@@ -165,13 +172,7 @@ const PrewatchClient = (props: {
                 <p className="capitalize">{media_type}</p>
 
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
-                <div className="flex items-center gap-1">
-                  {genres?.slice(0, 1).map((genre: string, idx: number) => (
-                    <div className="flex items-center gap-1" key={idx}>
-                      <p>{genre}</p>
-                    </div>
-                  ))}
-                </div>
+                <div className="flex items-center gap-1">{genresText}</div>
               </div>
               <p className="max-w-[500px] leading-tight line-clamp-6">
                 {overview}

@@ -76,6 +76,49 @@ export const fetchPopular = unstable_cache(
   },
 );
 
+export const removeCategory = cache(
+  async (
+    filmTmdbId: number,
+    category: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await db.transaction(async (tx) => {
+        // Delete specified category association
+        const result = await tx
+          .delete(filmCategories)
+          .where(
+            and(
+              eq(filmCategories.filmTmdbId, filmTmdbId),
+              eq(filmCategories.category, category),
+            ),
+          );
+        return result.rowsAffected > 0;
+      });
+      if (response !== true) {
+        return {
+          success: false,
+          message: "Unable to remove category from the film",
+        };
+      } else {
+        revalidateTag(category);
+        revalidatePath("/");
+        revalidatePath(`/admin/${category}`);
+
+        return {
+          success: true,
+          message: "The category has been removed from the film",
+        };
+      }
+    } catch (error) {
+      console.log(`An error occurred on the server: ${error}`);
+      return {
+        success: false,
+        message: "An error occurred on the server",
+      };
+    }
+  },
+);
+
 // Fetch films by content type
 export const fetchFilmsByContentType = cache(
   async (
@@ -191,81 +234,6 @@ export const fetchFeatured = cache(async () => {
   // Combine results (trending first, then popular)
   return [...trendingFilms, ...popularFilms];
 });
-
-// export const postToCarousel = async (
-//   filmId: number,
-//   mediaType: "movie" | "tv",
-// ) => {
-//   try {
-//     const movieDataReq = await fetch(
-//       `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
-//     );
-//     const {
-//       title: movieTitle,
-//       name: tvTitle,
-//       overview,
-//       backdrop_path,
-//       runtime: movieRuntime,
-//       number_of_seasons: seasons,
-//       genres: genreObjects,
-//       vote_average,
-//     } = await movieDataReq.json();
-//
-//     const title = movieTitle || tvTitle;
-//     let runtime: string | null = null;
-//     if (!movieRuntime) {
-//       runtime = null;
-//     } else {
-//       runtime = convertMinutes(movieRuntime);
-//     }
-//     const genres = genreObjects.map(({ name }: { name: string }) => name);
-//     const rating = Math.round(vote_average);
-//     // Helper function to sanitize titles for filenames
-//     const response = await fetch(backdropURL(backdrop_path));
-//     const arrayBuffer = await response.arrayBuffer();
-//     const backdropBuffer = Buffer.from(arrayBuffer);
-//
-//     const carouselFilmData = {
-//       tmdbId: filmId,
-//       title,
-//       contentType: mediaType,
-//       runtime,
-//       seasons,
-//       overview,
-//       backdropImage: backdropBuffer,
-//       genres,
-//       rating,
-//     };
-//
-//     const [carouselFilm] = await db
-//       .insert(carouselFilms)
-//       .values(carouselFilmData)
-//       .onConflictDoUpdate({
-//         target: carouselFilms.tmdbId,
-//         set: {
-//           backdropImage: backdropBuffer,
-//           rating: carouselFilmData.rating,
-//           updated_at: new Date(),
-//         },
-//       })
-//       .returning();
-//
-//     revalidatePath("/");
-//     revalidatePath("/admin/carousel");
-//     revalidateTag("carousel");
-//
-//     return {
-//       success: true,
-//       message: `Film ${carouselFilm.title} inserted successfully`,
-//     };
-//   } catch (error) {
-//     console.error(`Error processing movie: `, error);
-//     return {
-//       success: false,
-//       message: "An error occurred on the server",
-//     };
-//   }
-// };
 
 // export const addToCarousel = async (
 //   filmId: number,
@@ -494,6 +462,8 @@ export async function insertFilmFromTmdb(
       fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"), // Backdrop width 1280px
     ]);
 
+    const genres = JSON.stringify(tmdbFilm.genres.map((g) => g)) as any;
+
     // 4. Prepare film data
     const filmData: InsertFilm = {
       tmdbId: tmdbFilm.tmdbId,
@@ -501,7 +471,7 @@ export async function insertFilmFromTmdb(
       overview: tmdbFilm.overview,
       contentType: tmdbFilm.mediaType,
       mediaType: tmdbFilm.mediaType,
-      genres: JSON.stringify(tmdbFilm.genres.map((g) => g)),
+      genres,
       year: tmdbFilm.year,
       posterImage: posterBlob,
       backdropImage: backdropBlob,
@@ -533,8 +503,7 @@ export async function insertFilmFromTmdb(
 
         if (existingCategory) {
           return {
-            film: existingFilm,
-            message: `Film already exists in category '${category}'`,
+            message: `${tmdbFilm.title} already exists in category '${category}'`,
             action: "none",
           };
         }
@@ -550,8 +519,7 @@ export async function insertFilmFromTmdb(
         revalidatePath(`/admin/${category}`);
 
         return {
-          film: existingFilm,
-          message: `Added film to new category '${category}'`,
+          message: `Added  new category ${category} to film ${tmdbFilm.title}`,
           action: "category_added",
         };
       }
@@ -571,13 +539,14 @@ export async function insertFilmFromTmdb(
       revalidatePath("/");
       revalidatePath(`/admin/${category}`);
       return {
-        message: "New film created with category",
+        message: `New film ${tmdbFilm.title} created with category ${category}`,
         action: "film_created",
       };
     });
   } catch (error) {
-    throw new Error(
-      `Film insertion failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    return {
+      message: "An error occured on the server while inserting film",
+      action: "none",
+    };
   }
 }
