@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import dynamic from "next/dynamic";
-import { type Film } from "@/drizzle/schema";
+import { type Film } from "@/db/schema";
 import FilmCard from "@/features/films/components/FilmCard";
 import { User } from "@/types";
 import { fetchUserData } from "@/features/users/server/db";

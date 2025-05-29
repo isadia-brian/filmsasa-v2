@@ -1,4 +1,4 @@
-import { Film } from "@/drizzle/schema";
+import { Film } from "@/db/schema";
 
 export interface FilmType {
   posterImage?: string | null | undefined;

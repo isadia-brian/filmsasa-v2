@@ -1,5 +1,5 @@
-import { db } from "@/drizzle";
-import { films } from "@/drizzle/schema";
+import { db } from "@/db";
+import { films } from "@/db/schema";
 
 const options = {
   method: "GET",

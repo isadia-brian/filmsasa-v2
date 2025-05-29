@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/drizzle";
-import { films, type InsertFilm } from "@/drizzle/schema";
+import { db } from "@/db";
+import { films, type InsertFilm } from "@/db/schema";
 import { convertFilmMovies, convertSeries } from "./convertFilm";
 import { convertMinutes } from "@/lib/formatters";
 import { revalidateTag } from "next/cache";
