@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/drizzle";
-import { filmCategories, films, InsertFilm, type Film } from "@/drizzle/schema";
+import { db } from "@/db";
+import { filmCategories, films, InsertFilm, type Film } from "@/db/schema";
 import { eq, and, lte, gte, isNotNull, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
@@ -82,7 +82,7 @@ export const removeCategory = cache(
     category: string,
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await db.transaction(async (tx) => {
+      const deleted = await db.transaction(async (tx) => {
         // Delete specified category association
         const result = await tx
           .delete(filmCategories)
@@ -92,9 +92,9 @@ export const removeCategory = cache(
               eq(filmCategories.category, category),
             ),
           );
-        return result.rowsAffected > 0;
+        return result?.rowCount > 0;
       });
-      if (response !== true) {
+      if (!deleted) {
         return {
           success: false,
           message: "Unable to remove category from the film",
@@ -462,7 +462,8 @@ export async function insertFilmFromTmdb(
       fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"), // Backdrop width 1280px
     ]);
 
-    const genres = JSON.stringify(tmdbFilm.genres.map((g) => g)) as any;
+    const genres = tmdbFilm.genres;
+    const rating = Math.round(tmdbFilm.rating);
 
     // 4. Prepare film data
     const filmData: InsertFilm = {
@@ -473,9 +474,9 @@ export async function insertFilmFromTmdb(
       mediaType: tmdbFilm.mediaType,
       genres,
       year: tmdbFilm.year,
-      posterImage: posterBlob,
-      backdropImage: backdropBlob,
-      rating: tmdbFilm.rating,
+      posterImage: tmdbFilm.poster_path,
+      backdropImage: tmdbFilm.backdrop_path,
+      rating,
       seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
       runtime:
         tmdbFilm.mediaType === "movie"
@@ -545,7 +546,7 @@ export async function insertFilmFromTmdb(
     });
   } catch (error) {
     return {
-      message: "An error occured on the server while inserting film",
+      message: `An error occured on the server ${error}`,
       action: "none",
     };
   }

@@ -1,8 +1,8 @@
 "use server";
 
 import { SignUpFormSchema, FormState, LoginFormSchema } from "../../schemas";
-import { db } from "@/drizzle";
-import { users } from "@/drizzle/schema";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createSession, destroySession } from "@/lib/session";

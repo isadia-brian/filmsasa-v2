@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/drizzle";
-import { userFilms, users } from "@/drizzle/schema";
+import { db } from "@/db";
+import { userFilms, users } from "@/db/schema";
 import { FilmData } from "@/types/films";
 import { and, desc, eq, or } from "drizzle-orm";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";

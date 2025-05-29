@@ -2,11 +2,11 @@
 
 import "server-only";
 import { cache } from "react";
-import { users } from "@/drizzle/schema";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { decrypt } from "./session";
-import { db } from "@/drizzle";
+import { db } from "@/db";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;

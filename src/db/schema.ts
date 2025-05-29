@@ -1,71 +1,59 @@
-import { sqliteTable as table } from "drizzle-orm/sqlite-core";
-import * as t from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { pgEnum, pgTable as table } from "drizzle-orm/pg-core";
+import * as t from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
+// Helpers
 const timestamps = {
-  updated_at: t
-    .integer("updated_at", { mode: "timestamp" })
-    .$onUpdateFn(() => new Date()),
-  created_at: t
-    .integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+  updated_at: t.timestamp().$onUpdateFn(() => new Date()),
+  created_at: t.timestamp().defaultNow().notNull(),
 };
-
 export const userRoles = ["admin", "user"] as const;
 export type UserRole = (typeof userRoles)[number];
 
-// Because sqlite doesnt have native enums
-// We can use text with constraints
-
-export const contentTypeEnum = t.text("content_type", {
-  enum: ["movie", "tv", "kids"],
-});
-export const mediaTypeEnum = t.text("media_type", { enum: ["movie", "tv"] });
-export const userRoleEnum = t.text("user_roles", { enum: userRoles });
+// Enums
+export const contentTypeEnum = pgEnum("content_type", ["movie", "tv", "kids"]);
+export const mediaTypeEnum = pgEnum("media_type", ["movie", "tv"]);
+export const userRoleEnum = pgEnum("user_roles", userRoles);
 
 export const films = table(
   "films",
   {
-    id: t.integer("id").primaryKey({ autoIncrement: true }),
+    id: t.integer("id").primaryKey().generatedAlwaysAsIdentity(),
     tmdbId: t.integer("tmdb_id").notNull().unique(),
-    title: t.text("title").notNull(),
-    overview: t.text("overview").notNull(),
-    contentType: contentTypeEnum.notNull(),
-    mediaType: mediaTypeEnum.default("movie").notNull(),
-    genres: t.text("genres").notNull().$type<string[]>(),
-    year: t.integer("year").notNull(),
-    posterImage: t.blob("poster_image_data").notNull(),
-    quality: t.text("quality").notNull().default("HD"),
-    backdropImage: t.blob("backdrop_image_data").notNull(),
+    title: t.varchar("title", { length: 255 }).notNull(),
+    overview: t.varchar("overview").notNull(),
+    contentType: contentTypeEnum("content_type").notNull(),
+    mediaType: mediaTypeEnum("media_type").default("movie").notNull(),
+    genres: t.jsonb("genres").notNull().$type<string[]>(),
+    year: t.integer("year"),
+    posterImage: t.varchar("poster_image", { length: 255 }).notNull(),
+    quality: t.varchar("quality", { length: 20 }),
+    backdropImage: t.varchar("backdrop_image", { length: 255 }).notNull(),
     rating: t.integer("rating"),
     seasons: t.integer("seasons"),
-    runtime: t.text("runtime"),
+    runtime: t.varchar("runtime"),
     ...timestamps,
   },
-  (table) => ({
-    tmdbIdx: t.uniqueIndex("tmdb_idx").on(table.tmdbId),
-    titleIdx: t.index("title_idx").on(table.title),
-    contentTypeIdx: t.index("content_type_idx").on(table.contentType),
-  }),
+  (table) => [
+    t.uniqueIndex("tmdb_idx").on(table.tmdbId),
+    t.index("title_idx").on(table.title),
+    t.index("content_type_idx").on(table.contentType),
+  ],
 );
-
 export const filmCategories = table(
   "film_categories",
   {
     filmTmdbId: t
       .integer("film_tmdb_id")
       .references(() => films.tmdbId, { onDelete: "cascade" }),
-    category: t.text("category"), // 'trending', 'popular','carousel'
+    category: t.varchar("category", { length: 20 }), // 'trending', 'popular',
     ...timestamps,
   },
-  (table) => ({
-    filmCategoryUnique: t
-      .uniqueIndex("film_category_unique")
-      .on(table.filmTmdbId, table.category),
-    categoryIdx: t.index("category_idx").on(table.category),
-    filmTmdbIdIdx: t.index("film_tmdbId_idx").on(table.filmTmdbId),
-  }),
+  (table) => [
+    t.uniqueIndex("film_category_unique").on(table.filmTmdbId, table.category), // Ensures no duplicate (filmTmdbId, category) pairs
+    t.index("category_idx").on(table.category), // Speeds up queries filtering by category
+    t.index("film_tmdbId_idx").on(table.filmTmdbId),
+  ],
 );
 
 export const filmsRelations = relations(films, ({ many }) => ({
@@ -79,23 +67,35 @@ export const filmCategoriesRelations = relations(filmCategories, ({ one }) => ({
   }),
 }));
 
+export const users = table(
+  "users",
+  {
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
+    username: t.varchar("user_name", { length: 255 }).notNull(),
+    email: t.varchar("email", { length: 255 }).unique(),
+    password: t.varchar("password", { length: 512 }),
+    role: userRoleEnum("role").default("user").notNull(),
+    ...timestamps,
+  },
+  (table) => [t.uniqueIndex("email_idx").on(table.email)],
+);
+
 export const userFilms = table(
   "user_films",
   {
-    id: t.integer("id").primaryKey({ autoIncrement: true }),
+    id: t.integer().primaryKey().generatedAlwaysAsIdentity(),
     tmdbId: t.integer("tmdb_id").notNull(),
     userId: t
       .integer("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    title: t.text("title").notNull(),
-    mediaType: t.text("media_type", { enum: ["movie", "tv"] }).notNull(),
-    posterImage: t.text("poster_image"),
+    title: t.varchar("title").notNull(),
+    mediaType: mediaTypeEnum("media_type").default("movie").notNull(),
+    posterImage: t.varchar("poster_image"),
     year: t.integer("year"),
     rating: t.integer("rating"),
-    // User-specific metadata
-    isFavorite: t.integer("is_favorite", { mode: "boolean" }).default(false),
-    isWatchlist: t.integer("is_watchlist", { mode: "boolean" }).default(false),
+    isFavorite: t.boolean("is_Favorite").default(false),
+    isWatchlist: t.boolean("is_Watchlist").default(false),
     ...timestamps,
   },
   (table) => ({
@@ -109,23 +109,6 @@ export const userFilms = table(
   }),
 );
 
-// Updated users table (removed old favorites/watchlist relations)
-export const users = table(
-  "users",
-  {
-    id: t.integer("id").primaryKey({ autoIncrement: true }),
-    username: t.text("user_name").notNull(),
-    email: t.text("email").unique(),
-    password: t.text("password"),
-    role: userRoleEnum.default("user").notNull(),
-    ...timestamps,
-  },
-  (table) => ({
-    emailIdx: t.uniqueIndex("email_idx").on(table.email),
-  }),
-);
-
-// Updated relations
 export const userRelations = relations(users, ({ many }) => ({
   userFilms: many(userFilms),
 }));
