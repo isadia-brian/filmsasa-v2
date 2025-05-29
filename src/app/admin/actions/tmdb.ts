@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
-import {
-  type Film,
-  filmCategories,
-  films,
-  type InsertFilm,
-} from "@/drizzle/schema";
+import { type Film, filmCategories, films, type InsertFilm } from "@/db/schema";
 import { convertMinutes } from "@/lib/formatters";
-import { db } from "@/drizzle";
+import { db } from "@/db";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { findFilm } from "./findFilm";
 import { eq, and } from "drizzle-orm";

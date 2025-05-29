@@ -1,8 +1,8 @@
 "use server";
 
-import { db } from "@/drizzle";
+import { db } from "@/db";
 import { eq } from "drizzle-orm";
-import { films, type Film } from "@/drizzle/schema";
+import { films, type Film } from "@/db/schema";
 
 export const findFilm = async (
   tmdbId: Film["tmdbId"],
