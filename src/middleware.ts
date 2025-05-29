@@ -21,10 +21,10 @@ export default async function middleware(req: NextRequest) {
   if (isPublicRoute && session?.userId) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
-  // if (req.nextUrl.pathname.startsWith("/admin")) {
-  //   if (session?.userRole !== "admin") {
-  //     return NextResponse.redirect(new URL("/unauthorized", req.nextUrl));
-  //   }
-  // }
+  if (req.nextUrl.pathname.startsWith("/admin")) {
+    if (session?.userRole !== "admin") {
+      return NextResponse.redirect(new URL("/unauthorized", req.nextUrl));
+    }
+  }
   return NextResponse.next();
 }
