@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "uxlqgllrc8f85g5q.public.blob.vercel-storage.com",
+        port: "",
+      },
+      {
+        protocol: "https",
         hostname: "image.tmdb.org",
       },
       {
@@ -13,7 +18,7 @@ const nextConfig: NextConfig = {
         hostname: "github.com",
       },
     ],
-    minimumCacheTTL: 31536000,
+    //minimumCacheTTL: 31536000,
   },
   typescript: {
     ignoreBuildErrors: true,

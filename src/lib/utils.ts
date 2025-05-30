@@ -81,24 +81,3 @@ export const getCardLink = (
   }
   return cardLink;
 };
-
-// image-utils.ts
-export function bufferToDataURL(
-  buffer: Uint8Array,
-  type = "image/jpeg",
-): string {
-  const base64 = Buffer.from(buffer).toString("base64");
-  return `data:${type};base64,${base64}`;
-}
-
-export const convertFilms = cache((films: DrizzleFilm[]) => {
-  const filmsWithDataUrl = films.map((film) => ({
-    ...film,
-    backdropImage: backdropURL(film.backdropImage),
-    posterImage: posterURL(film.posterImage),
-    // backdropImage: bufferToDataURL(film.backdropImage as Uint8Array),
-    // posterImage: bufferToDataURL(film.posterImage as Uint8Array),
-  }));
-
-  return filmsWithDataUrl;
-});

@@ -1,5 +1,4 @@
 import { fetchTrending, fetchPopular } from "@/features/films/server/db/films";
-import { convertFilms } from "@/lib/utils";
 import SectionOne from "./Component.client";
 import { getUser } from "@/lib/dal";
 
@@ -11,7 +10,7 @@ const SectionFilter = async () => {
   const user = await getUser();
   const allFilms = [...trendingFilms, ...popularFilms];
 
-  const featured = convertFilms(allFilms);
+  const featured = allFilms;
 
   return (
     <div>

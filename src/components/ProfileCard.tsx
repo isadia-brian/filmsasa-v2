@@ -28,10 +28,8 @@ const ProfileCard = ({ user }: { user: User }) => {
       <div className="flex gap-2 p-2">
         <UserAvatar user={user} size="lg" />
         <div className="flex flex-col">
-          <p className="font-semibold text-neutral-800">{"isadia"}</p>
-          <p className="text-neutral-700 text-xs break-all">
-            {"developerisadia@gmail.com"}
-          </p>
+          <p className="font-semibold text-neutral-800">{user.username}</p>
+          <p className="text-neutral-700 text-xs break-all">{user.email}</p>
         </div>
       </div>
       <div className="px-2 py-2 text-sm">

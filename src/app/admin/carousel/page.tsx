@@ -3,7 +3,6 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
 import { fetchCarouselFilms } from "@/features/films/server/db/films";
-import { convertFilms } from "@/lib/utils";
 import FilmGrid from "../_components/FeaturedFilms/FilmGrid";
 
 export default async function Page(props: {
@@ -15,9 +14,8 @@ export default async function Page(props: {
   const query = searchParams?.query ?? "";
 
   const { films } = await fetchCarouselFilms();
-  const filmsWithDataUrls = convertFilms(films);
 
-  let carouselFilms = filmsWithDataUrls || [];
+  let carouselFilms = films || [];
 
   if (query && carouselFilms.length > 2) {
     carouselFilms = carouselFilms.filter((film) =>

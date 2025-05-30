@@ -8,7 +8,7 @@ import { cache } from "react";
 import { convertMinutes } from "@/lib/formatters";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { TMDBFilmData } from "@/types/films";
-
+import { put } from "@vercel/blob";
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(
   async (category: string): Promise<{ films: Film[] }> => {
@@ -92,7 +92,16 @@ export const removeCategory = cache(
               eq(filmCategories.category, category),
             ),
           );
-        return result?.rowCount > 0;
+        if (!result) {
+          return {
+            success: false,
+            message: "That film no longer exists in that category",
+          };
+        } else if (result && result.rowCount) {
+          return result.rowCount > 0;
+        } else {
+          return;
+        }
       });
       if (!deleted) {
         return {
@@ -420,6 +429,20 @@ async function fetchTmdbData(tmdbId: number, mediaType: "movie" | "tv") {
     number_of_seasons,
   };
 }
+const uploadBlobToVercel = async (imageData: any) => {
+  let allData = [];
+  for (let i = 0; i < imageData.length; i++) {
+    const filename = imageData[i].title;
+    const imageFile = imageData[i].image;
+    const blob = await put(filename, imageFile, {
+      access: "public",
+      addRandomSuffix: true,
+    });
+
+    allData.push(blob);
+  }
+  return allData;
+};
 
 async function fetchTmdbImage(imagePath: string, width: string) {
   if (!imagePath) {
@@ -434,7 +457,7 @@ async function fetchTmdbImage(imagePath: string, width: string) {
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  return new Uint8Array(arrayBuffer);
+  return Buffer.from(arrayBuffer);
 }
 
 export async function insertFilmFromTmdb(
@@ -462,10 +485,35 @@ export async function insertFilmFromTmdb(
       fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"), // Backdrop width 1280px
     ]);
 
+    const sanitizeFileName = (title: string) =>
+      title
+        .toLowerCase()
+        .replace(/\s+/g, "_") // Replace spaces with underscores
+        .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
+
+    const posterName = `films/${sanitizeFileName(tmdbFilm.title)}-Poster.jpg`;
+
+    const backdropName = `films/${sanitizeFileName(tmdbFilm.title)}-Backdrop.jpg`;
+
+    const imageData = [
+      {
+        title: posterName,
+        image: posterBlob,
+      },
+
+      {
+        title: backdropName,
+        image: backdropBlob,
+      },
+    ];
+    const vercelBlob = await uploadBlobToVercel(imageData);
+
+    const vercelPosterImage = vercelBlob[0].url;
+    const vercelBackdropImage = vercelBlob[1].url;
+
     const genres = tmdbFilm.genres;
     const rating = Math.round(tmdbFilm.rating);
 
-    // 4. Prepare film data
     const filmData: InsertFilm = {
       tmdbId: tmdbFilm.tmdbId,
       title: tmdbFilm.title,
@@ -474,20 +522,19 @@ export async function insertFilmFromTmdb(
       mediaType: tmdbFilm.mediaType,
       genres,
       year: tmdbFilm.year,
-      posterImage: tmdbFilm.poster_path,
-      backdropImage: tmdbFilm.backdrop_path,
+      posterImage: vercelPosterImage,
+      backdropImage: vercelBackdropImage,
       rating,
       seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
       runtime:
         tmdbFilm.mediaType === "movie"
           ? convertMinutes(tmdbData.runtime)
           : null,
-      quality: "HD",
+      quality: tmdbFilm.mediaType === "movie" ? "HD" : null,
     };
 
     // 5. Insert into database
     return await db.transaction(async (tx) => {
-      // Check for existing film
       // Check for existing film
       const existingFilm = await tx.query.films.findFirst({
         where: eq(films.tmdbId, tmdbFilm.tmdbId),

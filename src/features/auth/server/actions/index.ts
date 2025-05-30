@@ -117,6 +117,8 @@ export const modalSignIn = async (state: FormState, formData: FormData) => {
 
     await createSession(existingUser.id, existingUser.role);
 
+    revalidatePath("/");
+
     return {
       success: true,
     };

@@ -74,6 +74,7 @@ export const users = table(
     username: t.varchar("user_name", { length: 255 }).notNull(),
     email: t.varchar("email", { length: 255 }).unique(),
     password: t.varchar("password", { length: 512 }),
+    image: t.varchar("image"),
     role: userRoleEnum("role").default("user").notNull(),
     ...timestamps,
   },

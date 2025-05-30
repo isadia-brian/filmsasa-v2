@@ -5,7 +5,6 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
-import { convertFilms } from "@/lib/utils";
 import FilmGrid from "../_components/FeaturedFilms/FilmGrid";
 
 const page = async (props: {
@@ -18,8 +17,7 @@ const page = async (props: {
 
   const { films } = await fetchTrending();
 
-  const filmsWithDataUrls = convertFilms(films);
-  let trendingFilm = filmsWithDataUrls || [];
+  let trendingFilm = films || [];
 
   if (query) {
     trendingFilm = trendingFilm.filter((film) =>
