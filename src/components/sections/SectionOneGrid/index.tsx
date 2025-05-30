@@ -1,13 +1,12 @@
 import { fetchTrending, fetchPopular } from "@/features/films/server/db/films";
 import SectionOne from "./Component.client";
-import { getUser } from "@/lib/dal";
+import { User } from "@/types";
 
-const SectionFilter = async () => {
+const SectionFilter = async ({ user }: { user: User | null }) => {
   const [{ films: trendingFilms }, { films: popularFilms }] = await Promise.all(
     [fetchTrending(), fetchPopular()],
   );
 
-  const user = await getUser();
   const allFilms = [...trendingFilms, ...popularFilms];
 
   const featured = allFilms;

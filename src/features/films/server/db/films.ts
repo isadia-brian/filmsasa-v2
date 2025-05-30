@@ -9,6 +9,11 @@ import { convertMinutes } from "@/lib/formatters";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { TMDBFilmData } from "@/types/films";
 import { put } from "@vercel/blob";
+import {
+  fetchTmdbData,
+  fetchTmdbImage,
+} from "@/features/tmdb/server/actions/films";
+
 // Generic function to fetch films by category
 const fetchFilmsByCategory = cache(
   async (category: string): Promise<{ films: Film[] }> => {
@@ -244,304 +249,19 @@ export const fetchFeatured = cache(async () => {
   return [...trendingFilms, ...popularFilms];
 });
 
-// export const addToCarousel = async (
-//   filmId: number,
-//   mediaType: "movie" | "tv",
-// ) => {
-//   try {
-//     const movieDataReq = await fetch(
-//       `https://api.themoviedb.org/3/${mediaType}/${filmId}?language=en-US&api_key=${process.env.TMDB_API_KEY}`,
-//     );
-//     const {
-//       title: movieTitle,
-//       name: tvTitle,
-//       overview,
-//       backdrop_path,
-//       runtime: movieRuntime,
-//       number_of_seasons: seasons,
-//       genres: genreObjects,
-//     } = await movieDataReq.json();
-//
-//     const title = movieTitle || tvTitle;
-//     let runtime: string | null = null;
-//     if (!movieRuntime) {
-//       runtime = null;
-//     } else {
-//       runtime = convertMinutes(movieRuntime);
-//     }
-//     const genres = genreObjects.map(({ name }: { name: string }) => ({ name }));
-//
-//     // Helper function to sanitize titles for filenames
-//     const sanitizeFileName = (title: string) =>
-//       title
-//         .toLowerCase()
-//         .replace(/\s+/g, "_") // Replace spaces with underscores
-//         .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
-//
-//     const response = await fetch(backdropURL(backdrop_path));
-//     const arrayBuffer = await response.arrayBuffer();
-//     const posterBuffer = Buffer.from(arrayBuffer);
-//
-//     // Create directory if it doesn't exist
-//     const publicDir = path.join(process.cwd(), "public", "carousel");
-//     if (!fs.existsSync(publicDir)) {
-//       fs.mkdirSync(publicDir, { recursive: true });
-//     }
-//
-//     // Save image to filesystem
-//     const fileName = `${sanitizeFileName(title)}.jpg`;
-//     const filePath = path.join(publicDir, fileName);
-//     fs.writeFileSync(filePath, posterBuffer);
-//
-//     // Create film object with image path
-//     const film = {
-//       tmdbId: filmId,
-//       title,
-//       contentType: mediaType,
-//       runtime,
-//       seasons,
-//       overview,
-//       backdropImage: `/carousel/${fileName}`,
-//       genres,
-//     };
-//
-//     // Add to carousel data
-//     const dataPath = path.join(process.cwd(), "src", "data");
-//     if (!fs.existsSync(dataPath)) {
-//       console.log(`Creating directory ${dataPath}`);
-//       fs.mkdirSync(dataPath, { recursive: true });
-//
-//       console.log(`Created directory ${dataPath} successfully`);
-//     }
-//     const carouselFile = "carousel.ts";
-//     const fullDataPath = path.join(dataPath, carouselFile);
-//
-//     const carouselData = fs.existsSync(fullDataPath)
-//       ? require("../../../../../src/data/carousel.ts").carouselFilms
-//       : [];
-//
-//     // Avoid duplicates
-//     if (!carouselData.some((f: any) => f.tmdbId === film.tmdbId)) {
-//       const updatedFilms = [...carouselData, film];
-//
-//       // Create data directory if it doesn't exist
-//       const dataDir = path.dirname(fullDataPath);
-//       if (!fs.existsSync(dataDir)) {
-//         fs.mkdirSync(dataDir, { recursive: true });
-//       }
-//
-//       // Write formatted TypeScript file
-//       const fileContent = `// Auto-generated carousel data
-// export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
-//
-//       fs.writeFileSync(fullDataPath, fileContent);
-//       console.log("Successfully updated carousel data");
-//     }
-//
-//     revalidateTag("carousel");
-//     revalidatePath("/admin/carousel");
-//     revalidatePath("/");
-//
-//     return film;
-//   } catch (error) {
-//     console.error("Error processing movie:", error);
-//     throw error;
-//   }
-// };
-//
-// export const deleteFromCarousel = cache(async (filmId: number) => {
-//   try {
-//     const dataPath = path.join(process.cwd(), "src", "data", "carousel.ts");
-//
-//     // Read current carousel data
-//     const carouselData = fs.existsSync(dataPath)
-//       ? require("../../../../../src/data/carousel.ts").carouselFilms
-//       : [];
-//
-//     // Find the film to delete
-//     const filmToDelete = carouselData.find((f: any) => f.tmdbId === filmId);
-//     if (!filmToDelete) {
-//       return;
-//     }
-//
-//     // Delete associated image
-//     if (filmToDelete.backdropImage) {
-//       const imagePath = path.join(
-//         process.cwd(),
-//         "public",
-//         filmToDelete.backdropImage,
-//       );
-//
-//       if (fs.existsSync(imagePath)) {
-//         fs.unlinkSync(imagePath);
-//       }
-//     }
-//
-//     // Update carousel data
-//     const updatedFilms = carouselData.filter((f: any) => f.tmdbId !== filmId);
-//
-//     // Write updated data back to file
-//     const fileContent = `// Auto-generated carousel data
-// export const carouselFilms = ${JSON.stringify(updatedFilms, null, 2)};`;
-//
-//     fs.writeFileSync(dataPath, fileContent);
-//
-//     revalidateTag("carousel");
-//     revalidatePath("/admin/carousel");
-//     revalidatePath("/");
-//
-//     return true;
-//   } catch (error) {
-//     console.error("Error deleting film:", error);
-//     throw error;
-//   }
-// });
-
-export const getFilms = cache(
-  unstable_cache(
-    async () => {
-      const result = await db.query.films.findMany();
-      return result;
-    },
-    ["films"],
-    {
-      tags: ["films"],
-      revalidate: 60 * 60 * 60 * 3,
-    },
-  ),
-);
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-
-async function fetchTmdbData(tmdbId: number, mediaType: "movie" | "tv") {
-  const url = `${TMDB_BASE_URL}/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`TMDB API Error: ${response.statusText}`);
-  }
-
-  const { runtime, number_of_seasons } = await response.json();
-
-  return {
-    runtime,
-    number_of_seasons,
-  };
-}
-const uploadBlobToVercel = async (imageData: any) => {
-  let allData = [];
-  for (let i = 0; i < imageData.length; i++) {
-    const filename = imageData[i].title;
-    const imageFile = imageData[i].image;
-    const blob = await put(filename, imageFile, {
-      access: "public",
-      addRandomSuffix: true,
-    });
-
-    allData.push(blob);
-  }
-  return allData;
-};
-
-async function fetchTmdbImage(imagePath: string, width: string) {
-  if (!imagePath) {
-    throw new Error("Image path is required");
-  }
-
-  const url = `https://image.tmdb.org/t/p/${width}${imagePath}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${url}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-}
-
 export async function insertFilmFromTmdb(
   tmdbFilm: TMDBFilmData,
   category: string,
-): Promise<{
-  message: string;
-  action: "none" | "category_added" | "film_created";
-}> {
+) {
   try {
-    // 1. Fetch TMDB data
-    const tmdbData = await fetchTmdbData(tmdbFilm.tmdbId, tmdbFilm.mediaType);
-
-    // 2. Validate required image paths
-    if (!tmdbFilm.poster_path) {
-      throw new Error("TMDB poster path is missing");
-    }
-    if (!tmdbFilm.backdrop_path) {
-      throw new Error("TMDB backdrop path is missing");
-    }
-
-    // 3. Fetch images with specified dimensions
-    const [posterBlob, backdropBlob] = await Promise.all([
-      fetchTmdbImage(tmdbFilm.poster_path, "w500"), // Poster width 500px
-      fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"), // Backdrop width 1280px
-    ]);
-
-    const sanitizeFileName = (title: string) =>
-      title
-        .toLowerCase()
-        .replace(/\s+/g, "_") // Replace spaces with underscores
-        .replace(/[^\w-]/g, ""); // Remove non-alphanumeric characters
-
-    const posterName = `films/${sanitizeFileName(tmdbFilm.title)}-Poster.jpg`;
-
-    const backdropName = `films/${sanitizeFileName(tmdbFilm.title)}-Backdrop.jpg`;
-
-    const imageData = [
-      {
-        title: posterName,
-        image: posterBlob,
-      },
-
-      {
-        title: backdropName,
-        image: backdropBlob,
-      },
-    ];
-    const vercelBlob = await uploadBlobToVercel(imageData);
-
-    const vercelPosterImage = vercelBlob[0].url;
-    const vercelBackdropImage = vercelBlob[1].url;
-
-    const genres = tmdbFilm.genres;
-    const rating = Math.round(tmdbFilm.rating);
-
-    const filmData: InsertFilm = {
-      tmdbId: tmdbFilm.tmdbId,
-      title: tmdbFilm.title,
-      overview: tmdbFilm.overview,
-      contentType: tmdbFilm.mediaType,
-      mediaType: tmdbFilm.mediaType,
-      genres,
-      year: tmdbFilm.year,
-      posterImage: vercelPosterImage,
-      backdropImage: vercelBackdropImage,
-      rating,
-      seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
-      runtime:
-        tmdbFilm.mediaType === "movie"
-          ? convertMinutes(tmdbData.runtime)
-          : null,
-      quality: tmdbFilm.mediaType === "movie" ? "HD" : null,
-    };
-
-    // 5. Insert into database
     return await db.transaction(async (tx) => {
       // Check for existing film
       const existingFilm = await tx.query.films.findFirst({
         where: eq(films.tmdbId, tmdbFilm.tmdbId),
       });
 
+      // Handle existing film (no external calls)
       if (existingFilm) {
-        // Check if category already exists for this film
         const existingCategory = await tx.query.filmCategories.findFirst({
           where: and(
             eq(filmCategories.filmTmdbId, existingFilm.tmdbId),
@@ -556,45 +276,117 @@ export async function insertFilmFromTmdb(
           };
         }
 
-        // Add new category to existing film
         await tx.insert(filmCategories).values({
           filmTmdbId: existingFilm.tmdbId,
           category,
         });
 
-        revalidateTag(category);
-        revalidatePath("/");
-        revalidatePath(`/admin/${category}`);
-
+        revalidateFilmData(category);
         return {
-          message: `Added  new category ${category} to film ${tmdbFilm.title}`,
+          message: `Added new category ${category} to ${tmdbFilm.title}`,
           action: "category_added",
         };
       }
 
-      // Insert new film and category
-      const [insertedFilm] = await tx
-        .insert(films)
-        .values(filmData)
-        .returning();
+      // Process new film (only when needed)
 
+      // ... (prepareFilmData implementation from below) ...
+      const filmData = await prepareFilmData(tmdbFilm);
+
+      const [newFilm] = await tx.insert(films).values(filmData).returning();
       await tx.insert(filmCategories).values({
-        filmTmdbId: insertedFilm.tmdbId,
+        filmTmdbId: newFilm.tmdbId,
         category,
       });
 
-      revalidateTag(category);
-      revalidatePath("/");
-      revalidatePath(`/admin/${category}`);
+      revalidateFilmData(category);
       return {
-        message: `New film ${tmdbFilm.title} created with category ${category}`,
+        message: `Created new film ${tmdbFilm.title} in ${category}`,
         action: "film_created",
       };
     });
   } catch (error) {
+    console.error("Film insertion error:", error);
     return {
-      message: `An error occured on the server ${error}`,
+      message: "An error occurred while processing your request",
       action: "none",
     };
   }
 }
+
+// --- Helper Functions ---
+async function prepareFilmData(tmdbFilm: TMDBFilmData): Promise<InsertFilm> {
+  const [tmdbData, posterBlob, backdropBlob] = await Promise.all([
+    fetchTmdbData(tmdbFilm.tmdbId, tmdbFilm.mediaType),
+    fetchTmdbImage(tmdbFilm.poster_path, "w500"),
+    fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"),
+  ]);
+
+  const [vercelPosterImage, vercelBackdropImage] = await uploadFilmImages(
+    tmdbFilm.title,
+    posterBlob,
+    backdropBlob,
+  );
+
+  return {
+    tmdbId: tmdbFilm.tmdbId,
+    title: tmdbFilm.title,
+    overview: tmdbFilm.overview,
+    contentType: tmdbFilm.mediaType,
+    mediaType: tmdbFilm.mediaType,
+    genres: tmdbFilm.genres,
+    year: tmdbFilm.year,
+    posterImage: vercelPosterImage,
+    backdropImage: vercelBackdropImage,
+    rating: Math.round(tmdbFilm.rating),
+    seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
+    runtime:
+      tmdbFilm.mediaType === "movie" ? convertMinutes(tmdbData.runtime) : null,
+    quality: tmdbFilm.mediaType === "movie" ? "HD" : null,
+  };
+}
+
+async function uploadFilmImages(
+  title: string,
+  posterBlob: Buffer,
+  backdropBlob: Buffer,
+): Promise<[string, string]> {
+  const sanitize = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^\w-]/g, "");
+
+  const images = [
+    { name: `films/${sanitize(title)}_Poster.jpg`, blob: posterBlob },
+    { name: `films/${sanitize(title)}_Backdrop.jpg`, blob: backdropBlob },
+  ];
+
+  const uploaded = await Promise.all(
+    images.map((img) =>
+      put(img.name, img.blob, { access: "public", addRandomSuffix: true }),
+    ),
+  );
+
+  return [uploaded[0].url, uploaded[1].url];
+}
+
+function revalidateFilmData(category: string) {
+  revalidateTag(category);
+  revalidatePath("/");
+  revalidatePath(`/admin/${category}`);
+}
+
+export const getFilms = cache(
+  unstable_cache(
+    async () => {
+      const result = await db.query.films.findMany();
+      return result;
+    },
+    ["films"],
+    {
+      tags: ["films"],
+      revalidate: 60 * 60 * 60 * 3,
+    },
+  ),
+);

@@ -4,12 +4,20 @@ import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
 import { fetchCarouselFilms } from "@/features/films/server/db/films";
 import FilmGrid from "../_components/FeaturedFilms/FilmGrid";
+import { getUser } from "@/lib/dal";
+import { redirect } from "next/navigation";
 
 export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
   }>;
 }) {
+  const user = await getUser();
+
+  if (user?.role !== "admin") {
+    redirect("/unauthorized");
+  }
+
   const searchParams = await props.searchParams;
   const query = searchParams?.query ?? "";
 

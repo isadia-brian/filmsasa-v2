@@ -1,11 +1,10 @@
 import { Slider } from "./Slider";
 import { HeroMovieCard } from "./HeroMovieCard";
 import { fetchCarouselFilms } from "@/features/films/server/db/films";
-import { getUser } from "@/lib/dal";
+import { User } from "@/types";
 
-export const HeroCarousel = async () => {
+export const HeroCarousel = async ({ user }: { user: User | null }) => {
   const { films: data } = await fetchCarouselFilms();
-  const user = await getUser();
   const userId = user?.id;
   const films = data;
 

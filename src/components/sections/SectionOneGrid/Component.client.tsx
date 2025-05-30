@@ -44,7 +44,13 @@ const headerButtons = [
   },
 ];
 
-const SectionOne = ({ featured, user }: { featured: Film[]; user: User }) => {
+const SectionOne = ({
+  featured,
+  user,
+}: {
+  featured: Film[];
+  user: User | null;
+}) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [activeButtonIndex, setActiveButtonIndex] = useState(0);
   const [filter, setFilter] = useState<string>("Trending");

@@ -1,7 +1,15 @@
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import { SidebarInset } from "@/components/ui/sidebar";
+import { getUser } from "@/lib/dal";
+import { redirect } from "next/navigation";
 
-export default function Page() {
+export default async function Page() {
+  const user = await getUser();
+
+  if (user?.role !== "admin") {
+    redirect("/unauthorized");
+  }
+
   return (
     <SidebarInset>
       <SideBarInsetHeader />

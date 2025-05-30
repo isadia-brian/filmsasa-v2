@@ -593,6 +593,42 @@ export const fetchSectionFilms = unstable_cache(
   { revalidate: 60 * 60 * 60 },
 );
 
+export const fetchTmdbData = cache(
+  async (tmdbId: number, mediaType: "movie" | "tv") => {
+    const url = `${baseUrl}/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`TMDB API Error: ${response.statusText}`);
+    }
+
+    const { runtime, number_of_seasons } = await response.json();
+
+    return {
+      runtime,
+      number_of_seasons,
+    };
+  },
+);
+
+export const fetchTmdbImage = cache(
+  async (imagePath: string, width: string) => {
+    if (!imagePath) {
+      throw new Error("Image path is required");
+    }
+
+    const url = `https://image.tmdb.org/t/p/${width}${imagePath}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${url}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  },
+);
+
 const genres = [
   {
     id: 28,

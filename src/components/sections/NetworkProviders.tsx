@@ -1,33 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
-
-const watchProviders = [
-  {
-    name: "Netflix",
-    logo: `/providers/netflix.svg`,
-    link: "/providers/netflix",
-  },
-  {
-    name: "Apple TV",
-    logo: `/providers/apple-tv.svg`,
-    link: "/providers/apple-tv-plus",
-  },
-  {
-    name: "Amazon Prime",
-    logo: `/providers/prime-video.svg`,
-    link: "/providers/amazon-prime-video",
-  },
-  {
-    name: "Disney+",
-    logo: `/providers/disney-plus.svg`,
-    link: "/providers/disney-plus",
-  },
-  {
-    name: "Hulu",
-    logo: `/providers/hulu.svg`,
-    link: "/providers/hulu",
-  },
-];
+import ImageWithSkeleton from "../ImageWithSkeleton";
+import { watchProviders } from "@/data/links";
 
 const NetworkProviders = () => {
   return (
@@ -45,12 +18,11 @@ const NetworkProviders = () => {
             prefetch={false}
             className="flex min-w-[170px] h-[120px] items-center cursor-pointer justify-center relative bg-white rounded-md"
           >
-            <Image
+            <ImageWithSkeleton
               src={provider.logo}
               alt={provider.name}
               fill
               className="object-cover rounded-md"
-              loading="lazy"
             />
           </Link>
         ))}

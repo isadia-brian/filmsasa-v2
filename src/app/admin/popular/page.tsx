@@ -1,17 +1,23 @@
 import { fetchPopular } from "@/features/films/server/db/films";
-//import SearchFilm from "../_components/SearchFilm";
-//import { Suspense } from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
 import SideBarInsetHeader from "@/components/SideBarInsetHeader";
 import Modal from "@/components/modal";
 import FeaturedFilms from "../_components/FeaturedFilms";
 import FilmGrid from "../_components/FeaturedFilms/FilmGrid";
+import { getUser } from "@/lib/dal";
+import { redirect } from "next/navigation";
 
 const page = async (props: {
   searchParams?: Promise<{
     query?: string;
   }>;
 }) => {
+  const user = await getUser();
+
+  if (user?.role !== "admin") {
+    redirect("/unauthorized");
+  }
+
   const searchParams = await props.searchParams;
   const query = searchParams?.query;
 

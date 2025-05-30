@@ -35,7 +35,7 @@ const ProfileCard = ({ user }: { user: User }) => {
       <div className="px-2 py-2 text-sm">
         <div className="flex flex-col gap-1">
           <Link
-            href={`/account/lists`}
+            href={`#`}
             className="flex items-center gap-2 py-3  px-2 transition-colors group hover:bg-neutral-300 hover:text-neutral-950 rounded-lg"
           >
             <span>
@@ -48,7 +48,7 @@ const ProfileCard = ({ user }: { user: User }) => {
           </Link>
 
           <Link
-            href={`/account/profile`}
+            href={`#`}
             className="flex items-center gap-2 py-3  px-2 transition-colors group hover:bg-neutral-300 hover:text-neutral-950 rounded-lg"
           >
             <span>
