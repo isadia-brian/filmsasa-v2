@@ -40,12 +40,16 @@ const PrewatchClient = (props: {
     runtime,
   } = film;
 
-  // TODO: remove
   const singleFilm: number = parseInt(tmdbId);
 
   const handleClick = useCallback(
     async (tmdbId: number, action: "favorites" | "watchlist") => {
-      if (!userId || userId === 0) {
+      if (!userId) {
+        toast({
+          title: "Not Logged in",
+          variant: "destructive",
+          description: `Kindly sign in to add to your '${action}' `,
+        });
         return;
       } else if (loading) {
         return;
@@ -68,7 +72,11 @@ const PrewatchClient = (props: {
 
           if (success) router.refresh();
         } catch (error) {
-          console.log("Error posting");
+          toast({
+            title: "Error",
+            variant: "destructive",
+            description: `An error occurred while adding to your '${action}'`,
+          });
           return;
         } finally {
           setLoading(false);
@@ -193,7 +201,7 @@ const PrewatchClient = (props: {
             <button
               type="button"
               onClick={() => handleClick(tmdbId, "watchlist")}
-              className="transition-colors flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-neutral-400 text-sm hover:bg-black hover:text-white hover:border-black"
+              className="transition-colors flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-white text-sm hover:bg-black hover:text-white hover:border-black"
             >
               <span>
                 <PlusIcon className="h-4 w-4" />

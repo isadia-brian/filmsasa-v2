@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { fetchContent } from "@/features/tmdb/server/actions/films";
-import ActorCard from "../ActorCard";
 import dynamic from "next/dynamic";
 import SeasonEpisode from "./SeasonEpisode";
 
+const ActorCard = dynamic(() => import("./ActorCard"));
 const RecommendedCard = dynamic(() => import("./RecommendedCard"), {
   ssr: false,
 });
 const YoutubePlayer = dynamic(() => import("../YoutubePlayer"), { ssr: false });
+
 const TmdbContent = ({
   media,
   tmdbId,
@@ -61,19 +62,17 @@ const TmdbContent = ({
           tmdbId={tmdbId}
         />
       )}
-      <div className="text-white relative px-4  pt-10 pb-12 border-b-[0.5px] border-slate-400 ">
-        <h5 className="text-[17px] font-bold mb-6">Cast</h5>
+      {cast && cast.length > 0 && (
+        <div className="text-white relative px-4  pt-10 pb-12 border-b-[0.5px] border-slate-400 ">
+          <h5 className="text-[17px] font-bold mb-6">Cast</h5>
 
-        <ul className="flex items-center space-x-4 lg:space-x-4 overflow-x-scroll no-scrollbar">
-          {cast?.map((actor: any, idx: number) => {
-            let name = actor.name;
-            name = name.split(" ");
-            name =
-              name.length > 2 ? name.slice(0, 2).join(" ") : name.join(" ");
-            return <ActorCard actor={actor} name={name} key={idx} />;
-          })}
-        </ul>
-      </div>
+          <div className="flex items-center space-x-4 md:space-x-3 overflow-x-scroll no-scrollbar">
+            {cast.map((actor, index) => (
+              <ActorCard actor={actor} key={index} />
+            ))}
+          </div>
+        </div>
+      )}
       <div className="text-white relative px-4  pt-10 pb-12  ">
         <h5 className="text-[17px] font-bold mb-8">Recommendations</h5>
         <ul className="flex items-center space-x-3 lg:space-x-5 overflow-x-scroll no-scrollbar">

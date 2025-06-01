@@ -338,7 +338,7 @@ export const fetchProvider = cache(
 export const fetchContent = cache(
   async (tmdbId: number, media_type: string) => {
     const res = await fetch(
-      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,similar,videos&api_key=${TMDB_API_KEY}`,
+      `${baseUrl}/${media_type}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${TMDB_API_KEY}`,
       {
         cache: "force-cache",
       },
@@ -406,11 +406,17 @@ export const fetchContent = cache(
         (star: { known_for_department: string }) =>
           star.known_for_department === "Acting",
       )
-      .map((actor: any) => {
-        return actor;
-      });
+      .map(
+        (actor: { profile_path: string; name: string; character: string }) => {
+          return {
+            name: actor.name,
+            profile_path: actor.profile_path,
+            character: actor.character,
+          };
+        },
+      );
 
-    const cast = actors.slice(0, 15);
+    const cast = actors.slice(0, 11);
 
     let trailerUrl: string | null = "";
     let video_id: string | null = "";
