@@ -1,8 +1,9 @@
 "use client";
 
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import { ScrollButtons } from "@/components/ScrollButtons";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const SeasonEpisode = ({
   seasons,
@@ -17,6 +18,8 @@ const SeasonEpisode = ({
   const filteredEpisodes =
     seriesData?.filter((episode) => episode.season_number === activeSeason) ||
     [];
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="flex flex-col py-10 px-4 gap-4 font-semibold border-b-[0.5px] border-slate-400 overflow-x-scroll w-full no-scrollbar">
@@ -37,7 +40,16 @@ const SeasonEpisode = ({
         })}
       </div>
 
-      <div className="w-full">
+      {filteredEpisodes.length > 4 && (
+        <div className="mb-2">
+          <ScrollButtons scrollContainerRef={scrollContainerRef} />
+        </div>
+      )}
+
+      <div
+        ref={scrollContainerRef}
+        className="w-full overflow-x-scroll no-scrollbar"
+      >
         <ul className="flex items-center space-x-3 lg:space-x-5">
           {filteredEpisodes?.map((episode) => (
             <li key={episode.id} className="cursor-pointer">
@@ -71,7 +83,9 @@ const SeasonEpisode = ({
                   <p className="text-xs font-light">
                     Episode: {episode.episode_number}
                   </p>
-                  <p className="text-xs">{episode.name}</p>
+                  <p className="text-xs md:text-sm font-semibold">
+                    {episode.name}
+                  </p>
                 </div>
               </Link>
             </li>

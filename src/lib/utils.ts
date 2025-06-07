@@ -1,6 +1,5 @@
-import { type Film as DrizzleFilm } from "@/db/schema";
 import { clsx, type ClassValue } from "clsx";
-import { cache } from "react";
+import { cache, RefObject } from "react";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -27,7 +26,7 @@ export const ensureArray = (children: React.ReactNode | React.ReactNode[]) => {
   return Array.isArray(children) ? children : [children];
 };
 
-export const providerDetails = (slug: string) => {
+export const providerDetails = cache((slug: string) => {
   let providerId: string = "";
   let providerTitle: string = "";
 
@@ -56,7 +55,7 @@ export const providerDetails = (slug: string) => {
       break;
   }
   return { providerId, providerTitle };
-};
+});
 
 export const getCardLink = (
   category: "movie" | "tv" | "kids",
@@ -80,4 +79,25 @@ export const getCardLink = (
       break;
   }
   return cardLink;
+};
+
+export const scrollContainer = (
+  direction: number = 0,
+  scrollContainerRef?: RefObject<HTMLDivElement | null>,
+) => {
+  if (scrollContainerRef?.current) {
+    if (direction === 0) {
+      // Reset scroll position to the start (when changing filter)
+      scrollContainerRef.current.scrollTo({
+        left: 0,
+        behavior: "smooth",
+      });
+    } else {
+      // Scroll left or right when clicking on arrows
+      scrollContainerRef.current.scrollBy({
+        left: direction * 300, // Adjust this value as needed for scrolling distance
+        behavior: "smooth",
+      });
+    }
+  }
 };

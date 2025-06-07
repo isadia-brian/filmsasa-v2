@@ -1,5 +1,5 @@
-import { fetchFilmGenres } from "@/features/tmdb/server/actions/films";
-import DropDown from "./DropDown";
+//import { fetchFilmGenres } from "@/features/tmdb/server/actions/films";
+//import DropDown from "./DropDown";
 import SearchFilm from "./SearchFilm";
 
 const Filter = async ({ filmType }: { filmType: string }) => {
@@ -8,18 +8,18 @@ const Filter = async ({ filmType }: { filmType: string }) => {
   if (filmType === "series") {
     mediaType = "tv";
   }
-  const genres = await fetchFilmGenres(mediaType);
+  //const genres = await fetchFilmGenres(mediaType);
 
-  const sortByList = [
-    {
-      name: "Popular",
-      value: "popular",
-    },
-    {
-      name: "Top Rated",
-      value: "top_rated",
-    },
-  ];
+  // const sortByList = [
+  //   {
+  //     name: "Popular",
+  //     value: "popular",
+  //   },
+  //   {
+  //     name: "Top Rated",
+  //     value: "top_rated",
+  //   },
+  // ];
 
   return (
     <div>
@@ -30,7 +30,7 @@ const Filter = async ({ filmType }: { filmType: string }) => {
         <div className="hidden md:inline-block">
           <SearchFilm placeholder={`Search ${filmType}`} />
         </div>
-        <DropDown label="Sort">
+        {/*<DropDown label="Sort">
           <ul className="flex flex-col gap-2 pl-1">
             {sortByList?.map((item) => (
               <li
@@ -43,7 +43,7 @@ const Filter = async ({ filmType }: { filmType: string }) => {
             ))}
           </ul>
         </DropDown>
-        {/*<DropDown label="Year">
+        <DropDown label="Year">
           <ul className="grid grid-cols-13 gap-2 pl-3">
             {years?.map((year, index) => (
               <li
@@ -55,7 +55,7 @@ const Filter = async ({ filmType }: { filmType: string }) => {
               </li>
             ))}
           </ul>
-        </DropDown>*/}
+        </DropDown>
         <DropDown label="Genre">
           <ul className="grid grid-cols-4 gap-2 pl-4">
             {genres?.map((genre: string, index: number) => (
@@ -68,7 +68,7 @@ const Filter = async ({ filmType }: { filmType: string }) => {
               </li>
             ))}
           </ul>
-        </DropDown>
+        </DropDown>*/}
       </div>
     </div>
   );

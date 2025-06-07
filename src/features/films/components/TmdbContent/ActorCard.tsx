@@ -28,7 +28,7 @@ const ActorCard = (props: {
 
   return (
     <div className="flex flex-col py-1 max-w-[6rem] md:max-w-[7.5rem] px-1 items-center">
-      <div className="relative h-[5.9rem] w-[5.9rem] lg:h-[6.5rem] lg:w-[6.5rem] mb-3 rounded-full ring-1 ring-offset-1 ring-white">
+      <div className="relative h-[5.9rem] w-[5.9rem] lg:h-[6.5rem] lg:w-[6.5rem]  rounded-full ring-1 ring-offset-1 ring-white">
         {ImageUrl && (
           <Image
             src={ImageUrl}
@@ -40,15 +40,16 @@ const ActorCard = (props: {
           />
         )}
       </div>
-      <div className="min-h-10 mb-3">
+      <div className="h-16 mt-3 mb-1">
         <p className="flex items-center justify-center text-xs lg:text-sm font-semibold text-center ">
           {twoNames}
         </p>
       </div>
-
-      <p className="flex items-center justify-center text-xs lg:text-sm font-light text-center">
-        {oneCharacterName}
-      </p>
+      <div className="h-16">
+        <p className="flex items-center justify-center text-xs lg:text-sm font-light text-center">
+          {oneCharacterName}
+        </p>
+      </div>
     </div>
   );
 };

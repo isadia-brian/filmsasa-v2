@@ -33,7 +33,7 @@ const RecommendedCard = (props: {
       break;
   }
   return (
-    <li className="flex flex-col space-y-2" key={id}>
+    <div className="flex flex-col space-y-2" key={id}>
       <Link
         href={url}
         className="group relative h-[110px] w-[200px] md:h-[150px] md:w-[260px] rounded-lg bg-white hover:cursor-default"
@@ -64,7 +64,7 @@ const RecommendedCard = (props: {
       <p className="text-xs lg:text-sm font-semibold  min-h-10">
         {title || name}
       </p>
-    </li>
+    </div>
   );
 };
 

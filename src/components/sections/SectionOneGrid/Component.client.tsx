@@ -19,6 +19,8 @@ import FilmCard from "@/features/films/components/FilmCard";
 import { User } from "@/types";
 import { fetchUserData } from "@/features/users/server/db";
 import { FilmType } from "@/types/films";
+import { scrollContainer } from "@/lib/utils";
+import { ScrollButtons } from "@/components/ScrollButtons";
 
 const AuthModal = dynamic(
   () => import("../../../features/auth/components/AuthModal"),
@@ -145,24 +147,6 @@ const SectionOne = ({
     scrollContainer(0);
   };
 
-  const scrollContainer = (direction: number = 0) => {
-    if (scrollContainerRef.current) {
-      if (direction === 0) {
-        // Reset scroll position to the start (when changing filter)
-        scrollContainerRef.current.scrollTo({
-          left: 0,
-          behavior: "smooth",
-        });
-      } else {
-        // Scroll left or right when clicking on arrows
-        scrollContainerRef.current.scrollBy({
-          left: direction * 300, // Adjust this value as needed for scrolling distance
-          behavior: "smooth",
-        });
-      }
-    }
-  };
-
   return (
     <div className=" text-white mb-5 relative w-full">
       {showAuth && (
@@ -199,19 +183,7 @@ const SectionOne = ({
           ))}
         </div>
       </div>
-
-      <div className="w-full hidden md:flex justify-end items-center pr-4 pt-3 md:pr-6">
-        <div className="flex items-center gap-[1px]">
-          <ChevronLeft
-            onClick={() => scrollContainer(-1)}
-            className="h-5 w-5 text-white/65 hover:text-white transition-colors duration-300 cursor-pointer"
-          />
-          <ChevronRight
-            onClick={() => scrollContainer(1)}
-            className="h-5 w-5 text-white/65 hover:text-white transition-colors duration-300 cursor-pointer"
-          />
-        </div>
-      </div>
+      <ScrollButtons scrollContainerRef={scrollContainerRef} />
       <div
         ref={scrollContainerRef}
         className="relative lg:min-h-[360px] flex gap-[10px] px-4 pt-5 w-full  overflow-x-scroll no-scrollbar"
