@@ -36,7 +36,7 @@ const fetchFilmsByCategory = cache(
             eq(filmCategories.category, category),
         },
       },
-      orderBy: (films, { asc }) => [asc(films.created_at)],
+      orderBy: (films, { desc }) => [desc(films.created_at)],
     });
 
     const uniqueFilmsMap = new Map<number, Film>();
