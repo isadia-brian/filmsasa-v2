@@ -11,7 +11,15 @@ const SeasonEpisode = ({
   tmdbId,
 }: {
   seasons: number;
-  seriesData?: any[];
+  seriesData:
+    | {
+        episode_number: number;
+        id: number;
+        name: string;
+        still_path: string;
+        season_number: number;
+      }[]
+    | null;
   tmdbId: number;
 }) => {
   const [activeSeason, setActiveSeason] = useState<number>(1);

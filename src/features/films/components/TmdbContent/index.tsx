@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { fetchContent } from "@/features/tmdb/server/actions/films";
+import { useRef } from "react";
 import dynamic from "next/dynamic";
 import SeasonEpisode from "./SeasonEpisode";
 import { ScrollButtons } from "@/components/ScrollButtons";
+import { FilmDetails } from "@/types/films";
 
 const ActorCard = dynamic(() => import("./ActorCard"));
 const RecommendedCard = dynamic(() => import("./RecommendedCard"), {
@@ -13,60 +13,35 @@ const RecommendedCard = dynamic(() => import("./RecommendedCard"), {
 const YoutubePlayer = dynamic(() => import("../YoutubePlayer"), { ssr: false });
 
 const TmdbContent = ({
-  media,
   tmdbId,
   trailerOpen,
   toggleYoutube,
+  cast,
   title,
+  recommendations,
+  video,
+  seriesData,
 }: {
   media: string;
   tmdbId: number;
   trailerOpen: boolean;
   toggleYoutube: () => void;
   title: string;
+  cast: FilmDetails["cast"];
+  recommendations: FilmDetails["recommendations"];
+  video: FilmDetails["video"];
+  seriesData: FilmDetails["seriesData"];
 }) => {
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [cast, setCast] = useState<any[]>([]);
-  const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
-  const [seasons, setSeasons] = useState<number | null>(null);
-  const [seriesData, setSeriesData] = useState<any[]>();
-  const [logos, setLogos] = useState<any[]>();
-
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const scrollRecommendationsRef = useRef<HTMLDivElement | null>(null);
 
-  const [videoId, setVideoId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const results = await fetchContent(tmdbId, media);
-      const {
-        recommendations,
-        cast,
-        trailerUrl: url,
-        video_id,
-        seasons,
-        seriesData: episodes,
-        images,
-      } = results;
-      setCast(cast);
-      setRecommendations(recommendations);
-      setTrailerUrl(url);
-      setVideoId(video_id);
-      setSeasons(seasons);
-      setSeriesData(episodes);
-      setLogos(images);
-    };
-    fetchData();
-  }, []);
-
   return (
     <div>
-      {seasons && (
+      {seriesData && seriesData.seasons && (
         <SeasonEpisode
-          seasons={seasons}
-          seriesData={seriesData}
+          seasons={seriesData.seasons}
+          seriesData={seriesData.episodes}
           tmdbId={tmdbId}
         />
       )}
@@ -99,34 +74,40 @@ const TmdbContent = ({
           ref={scrollRecommendationsRef}
           className="flex items-center space-x-3 lg:space-x-5 overflow-x-scroll no-scrollbar"
         >
-          {recommendations?.map(
-            ({
-              title,
-              name,
-              backdrop_path,
-              id,
-            }: {
-              title: string;
-              name: string;
-              backdrop_path: string;
-              id: number;
-            }) => (
-              <RecommendedCard
-                id={id}
-                title={title}
-                name={name}
-                backdrop_path={backdrop_path}
-                key={id}
-                media={media}
-              />
-            ),
+          {recommendations && (
+            <>
+              {recommendations.map(
+                ({
+                  id,
+                  title,
+                  name,
+                  backdrop_path,
+                  media_type,
+                }: {
+                  id: number;
+                  title?: string;
+                  name?: string;
+                  backdrop_path: string;
+                  media_type: string;
+                }) => (
+                  <RecommendedCard
+                    id={id}
+                    key={id}
+                    title={title}
+                    name={name}
+                    backdrop_path={backdrop_path}
+                    media={media_type}
+                  />
+                ),
+              )}
+            </>
           )}
         </div>
       </div>
-      {trailerOpen && (
+      {trailerOpen && video && (
         <YoutubePlayer
-          videoId={videoId}
-          officialTrailer={trailerUrl}
+          videoId={video.videoId}
+          officialTrailer={video.trailerUrl}
           toggleYoutube={toggleYoutube}
           title={title}
         />

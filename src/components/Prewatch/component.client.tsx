@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { aquire } from "@/app/fonts";
 import { addToUserList } from "@/features/users/server/db";
-import { FilmData } from "@/types/films";
+import { FilmData, FilmDetails } from "@/types/films";
 import { useRouter } from "next/navigation";
 import { posterURL } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,7 @@ const TmdbContent = dynamic(
   () => import("../../features/films/components/TmdbContent"),
 );
 const PrewatchClient = (props: {
-  film: any;
+  film: FilmDetails;
   kidsPage?: boolean;
   userId?: number;
 }) => {
@@ -35,12 +35,13 @@ const PrewatchClient = (props: {
     backdropImage,
     posterImage,
     genres,
-    media_type,
-    seasons,
+    recommendations,
+    video,
+    mediaType,
+    seriesData,
+    cast,
     runtime,
   } = film;
-
-  const singleFilm: number = parseInt(tmdbId);
 
   const handleClick = useCallback(
     async (tmdbId: number, action: "favorites" | "watchlist") => {
@@ -58,7 +59,7 @@ const PrewatchClient = (props: {
           setLoading(true);
           const film: FilmData = {
             title,
-            mediaType: media_type,
+            mediaType,
             posterImage: posterURL(posterImage),
           };
           const response = await addToUserList(userId, tmdbId, action, film);
@@ -95,7 +96,8 @@ const PrewatchClient = (props: {
   if (runtime) {
     duration = runtime;
   } else {
-    duration = seasons === 1 ? "1 season" : `${seasons} seasons`;
+    duration =
+      seriesData?.seasons === 1 ? "1 season" : `${seriesData?.seasons} seasons`;
   }
 
   const firstThreeGenres = genres.slice(0, 3);
@@ -148,7 +150,7 @@ const PrewatchClient = (props: {
             <Link
               href={{
                 pathname: `/watch`,
-                query: { media: media_type, id: film?.tmdbId },
+                query: { media: mediaType, id: film?.tmdbId },
               }}
               className="border-2 animate-pulse flex items-center justify-center border-red-500 rounded-full h-14 w-14 md:h-24 md:w-24"
             >
@@ -169,15 +171,16 @@ const PrewatchClient = (props: {
                       <span>{runtime}</span>
                     </p>
                   )}
-                  {seasons && (
+                  {seriesData && seriesData.seasons && (
                     <p className=" flex items-center gap-2">
-                      {seasons} {seasons > 1 ? "seasons" : "season"}
+                      {seriesData.seasons}{" "}
+                      {seriesData.seasons > 1 ? "seasons" : "season"}
                     </p>
                   )}
                 </div>
 
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
-                <p className="capitalize">{media_type}</p>
+                <p className="capitalize">{mediaType}</p>
 
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
                 <div className="flex items-center gap-1">{genresText}</div>
@@ -213,8 +216,12 @@ const PrewatchClient = (props: {
       </div>
       {!kidsPage && (
         <TmdbContent
-          media={media_type}
-          tmdbId={singleFilm}
+          media={mediaType}
+          tmdbId={tmdbId}
+          cast={cast}
+          recommendations={recommendations}
+          seriesData={seriesData}
+          video={video}
           trailerOpen={trailerOpen}
           toggleYoutube={toggleYoutube}
           title={title}

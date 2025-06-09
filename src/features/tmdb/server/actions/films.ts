@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { TMDBFilm } from "@/types/films";
+import { FilmDetails, TMDBFilm } from "@/types/films";
 import { convertMinutes, convertYear } from "@/lib/formatters";
 import { posterURL } from "@/lib/utils";
 
@@ -646,6 +646,177 @@ export const fetchTmdbImage = cache(
     return Buffer.from(arrayBuffer);
   },
 );
+
+export const fetchFilmDetails = async ({
+  mediaType,
+  tmdbId,
+}: {
+  mediaType: string;
+  tmdbId: number;
+}) => {
+  try {
+    const response = await fetch(
+      `${baseUrl}/${mediaType}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${TMDB_API_KEY}`,
+    );
+    const film = await response.json();
+
+    const title = film.title || film.name;
+    const overview = film.overview;
+    const backdropImage = film.backdrop_path;
+    const posterImage = film.poster_path;
+
+    const similar = film.recommendations.results;
+
+    const recommendations = similar.slice(0, 5);
+    const vote_average = film.vote_average;
+
+    let seasons: number = 0;
+    let year: number | null = null;
+    let runtime: string = "";
+
+    let seriesData: FilmDetails["seriesData"] | null = {
+      seasons: null,
+      episodes: null,
+    };
+
+    let trailerUrl: string | null = "";
+    let videoId: string | null = "";
+
+    const genres = film.genres.map((g: { name: string }) => g.name);
+    const credits = film.credits.cast;
+    const actors = credits
+      .filter(
+        (star: { known_for_department: string }) =>
+          star.known_for_department === "Acting",
+      )
+      .map(
+        (actor: { profile_path: string; name: string; character: string }) => {
+          return {
+            name: actor.name,
+            profile_path: actor.profile_path,
+            character: actor.character,
+          };
+        },
+      );
+
+    const cast = actors.slice(0, 10);
+
+    if (mediaType === "tv") {
+      seasons = parseInt(film.number_of_seasons);
+      year = parseInt(film.first_air_date.split("-")[0]);
+      const data = await fetchSeriesData(mediaType, seasons, tmdbId);
+
+      if (data !== null) {
+        seriesData = data;
+      } else {
+        seriesData = null;
+      }
+    } else {
+      seriesData = null;
+      year = parseInt(film.release_date.split("-")[0]);
+      runtime = convertMinutes(film.runtime);
+    }
+
+    const trailer = film.videos.results.find(
+      (video: { name: string; site: string }) =>
+        video.name.toLowerCase().includes("trailer") &&
+        video.site === "YouTube",
+    );
+
+    if (!trailer) {
+      trailerUrl = null;
+      videoId = null;
+    } else {
+      trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+      videoId = trailer.key;
+    }
+
+    const video = {
+      trailerUrl,
+      videoId,
+    };
+
+    return {
+      tmdbId,
+      title,
+      overview,
+      year,
+      recommendations,
+      mediaType,
+      genres,
+      video,
+      backdropImage,
+      posterImage,
+      runtime,
+      vote_average,
+      seriesData,
+      cast,
+    };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+const fetchSeriesData = async (
+  media_type: "tv",
+  seasons: number,
+  tmdbId: number,
+) => {
+  let tvData: FilmDetails["seriesData"] | null = {
+    seasons: null,
+    episodes: [],
+  };
+  const urls = Array.from(
+    { length: seasons },
+    (_, i) =>
+      `${baseUrl}/${media_type}/${tmdbId}/season/${
+        i + 1
+      }?language=en-US&api_key=${TMDB_API_KEY}`,
+  );
+
+  try {
+    for (let i = 0; i < urls.length; i++) {
+      try {
+        const response = await fetch(urls[i]);
+        if (!response.ok) {
+          console.log(
+            `Error fetching response: HTTP ${response.status} - ${response.statusText}`,
+          );
+        }
+        const { episodes } = await response.json();
+
+        if (episodes) {
+          const data = episodes.map(
+            ({
+              episode_number,
+              id,
+              name,
+              still_path,
+              season_number,
+            }: {
+              episode_number: number;
+              id: number;
+              name: string;
+              still_path: string;
+              season_number: number;
+            }) => ({ episode_number, id, name, still_path, season_number }),
+          );
+
+          tvData.episodes?.push(...data);
+        }
+      } catch (error) {
+        console.log(`An error occurred: ${error}`);
+      }
+    }
+    tvData.seasons = seasons;
+
+    return tvData;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 
 const genres = [
   {

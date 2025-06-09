@@ -3,13 +3,15 @@ import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 
 const RecommendedCard = (props: {
-  title: string;
-  name: string;
+  title?: string;
+  name?: string;
   id: number;
   backdrop_path: string;
   media: string;
 }) => {
   const { title, name, id, backdrop_path, media } = props;
+
+  const filmTitle = title || name;
 
   let url: string = "";
 
@@ -46,7 +48,7 @@ const RecommendedCard = (props: {
           }
           fill
           quality={65}
-          alt={title || name}
+          alt={typeof filmTitle === "string" ? filmTitle : "image"}
           className="rounded-lg object-cover"
           loading="lazy"
         />
@@ -61,9 +63,7 @@ const RecommendedCard = (props: {
           </div>
         </div>
       </Link>
-      <p className="text-xs lg:text-sm font-semibold  min-h-10">
-        {title || name}
-      </p>
+      <p className="text-xs lg:text-sm font-semibold  min-h-10">{filmTitle}</p>
     </div>
   );
 };
