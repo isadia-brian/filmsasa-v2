@@ -647,116 +647,122 @@ export const fetchTmdbImage = cache(
   },
 );
 
-export const fetchFilmDetails = async ({
-  mediaType,
-  tmdbId,
-}: {
-  mediaType: string;
-  tmdbId: number;
-}) => {
-  try {
-    const response = await fetch(
-      `${baseUrl}/${mediaType}/${tmdbId}?append_to_response=recommendations,credits,videos&api_key=${TMDB_API_KEY}`,
-    );
-    const film = await response.json();
-
-    const title = film.title || film.name;
-    const overview = film.overview;
-    const backdropImage = film.backdrop_path;
-    const posterImage = film.poster_path;
-
-    const similar = film.recommendations.results;
-
-    const recommendations = similar.slice(0, 5);
-    const vote_average = film.vote_average;
-
-    let seasons: number = 0;
-    let year: number | null = null;
-    let runtime: string = "";
-
-    let seriesData: FilmDetails["seriesData"] | null = {
-      seasons: null,
-      episodes: null,
-    };
-
-    let trailerUrl: string | null = "";
-    let videoId: string | null = "";
-
-    const genres = film.genres.map((g: { name: string }) => g.name);
-    const credits = film.credits.cast;
-    const actors = credits
-      .filter(
-        (star: { known_for_department: string }) =>
-          star.known_for_department === "Acting",
-      )
-      .map(
-        (actor: { profile_path: string; name: string; character: string }) => {
-          return {
-            name: actor.name,
-            profile_path: actor.profile_path,
-            character: actor.character,
-          };
-        },
+export const fetchFilmDetails = cache(
+  async ({ mediaType, tmdbId }: { mediaType: string; tmdbId: number }) => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/${mediaType}/${tmdbId}?append_to_response=recommendations,${mediaType === "tv" ? "aggregate_credits" : "credits"},videos&api_key=${TMDB_API_KEY}`,
       );
+      const film = await response.json();
 
-    const cast = actors.slice(0, 10);
+      const title = film.title || film.name;
+      const overview = film.overview;
+      const backdropImage = film.backdrop_path;
+      const posterImage = film.poster_path;
 
-    if (mediaType === "tv") {
-      seasons = parseInt(film.number_of_seasons);
-      year = parseInt(film.first_air_date.split("-")[0]);
-      const data = await fetchSeriesData(mediaType, seasons, tmdbId);
+      const similar = film.recommendations.results;
 
-      if (data !== null) {
-        seriesData = data;
+      const recommendations = similar.slice(0, 5);
+      const vote_average = film.vote_average;
+
+      let seasons: number = 0;
+      let year: number | null = null;
+      let runtime: string = "";
+
+      let seriesData: FilmDetails["seriesData"] | null = {
+        seasons: null,
+        episodes: null,
+      };
+
+      let trailerUrl: string | null = "";
+      let videoId: string | null = "";
+
+      const genres = film.genres.map((g: { name: string }) => g.name);
+      const credits =
+        mediaType === "tv" ? film.aggregate_credits.cast : film.credits.cast;
+
+      const actors = credits
+        .filter(
+          (star: { known_for_department: string }) =>
+            star.known_for_department === "Acting",
+        )
+        .map(
+          (actor: {
+            profile_path: string;
+            name: string;
+            character?: string;
+            roles: {
+              character: string;
+            }[];
+          }) => {
+            return {
+              name: actor.name,
+              profile_path: actor.profile_path,
+              character:
+                mediaType === "tv" ? actor.roles[0].character : actor.character,
+            };
+          },
+        );
+
+      const cast = actors.slice(0, 20);
+
+      if (mediaType === "tv") {
+        seasons = parseInt(film.number_of_seasons);
+        year = parseInt(film.first_air_date.split("-")[0]);
+        const data = await fetchSeriesData(mediaType, seasons, tmdbId);
+
+        if (data !== null) {
+          seriesData = data;
+        } else {
+          seriesData = null;
+        }
       } else {
         seriesData = null;
+        year = parseInt(film.release_date.split("-")[0]);
+        runtime = convertMinutes(film.runtime);
       }
-    } else {
-      seriesData = null;
-      year = parseInt(film.release_date.split("-")[0]);
-      runtime = convertMinutes(film.runtime);
+
+      const trailer = film.videos.results.find(
+        (video: { name: string; site: string }) =>
+          video.name.toLowerCase().includes("trailer") &&
+          video.site === "YouTube",
+      );
+
+      if (!trailer) {
+        trailerUrl = null;
+        videoId = null;
+      } else {
+        trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
+        videoId = trailer.key;
+      }
+
+      const video = {
+        trailerUrl,
+        videoId,
+      };
+
+      return {
+        tmdbId,
+        title,
+        overview,
+        year,
+        recommendations,
+        mediaType,
+        genres,
+        video,
+        backdropImage,
+        posterImage,
+        runtime,
+        vote_average,
+        seriesData,
+        cast,
+      };
+    } catch (error) {
+      console.log(error);
+      return null;
     }
-
-    const trailer = film.videos.results.find(
-      (video: { name: string; site: string }) =>
-        video.name.toLowerCase().includes("trailer") &&
-        video.site === "YouTube",
-    );
-
-    if (!trailer) {
-      trailerUrl = null;
-      videoId = null;
-    } else {
-      trailerUrl = `https://www.youtube.com/embed/${trailer.key}`;
-      videoId = trailer.key;
-    }
-
-    const video = {
-      trailerUrl,
-      videoId,
-    };
-
-    return {
-      tmdbId,
-      title,
-      overview,
-      year,
-      recommendations,
-      mediaType,
-      genres,
-      video,
-      backdropImage,
-      posterImage,
-      runtime,
-      vote_average,
-      seriesData,
-      cast,
-    };
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
-};
+  },
+);
 
 const fetchSeriesData = async (
   media_type: "tv",
