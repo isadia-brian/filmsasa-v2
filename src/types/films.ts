@@ -49,7 +49,7 @@ export interface FilmCardProps {
 
 export interface FilmData {
   title: string;
-  mediaType: string;
+  mediaType: "movie" | "tv";
   posterImage?: string;
   year?: number;
   rating?: number;
@@ -91,7 +91,10 @@ export interface FilmDetails {
     | {
         name: string;
         profile_path: string;
-        character: string;
+        roles: {
+          character: string;
+        }[];
+        character?: string;
       }[]
     | null;
   video: {

@@ -68,12 +68,45 @@ export const addToUserList = cache(
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const existingUser = await getUser(userId);
-
-      if (!existingUser)
+      if (!existingUser) {
         return {
           success: false,
           message: "Please sign in or sign up to save films",
         };
+      }
+
+      // Check for existing film in user's list
+      const existingFilm = await db.query.userFilms.findFirst({
+        where: and(eq(userFilms.userId, userId), eq(userFilms.tmdbId, tmdbId)),
+      });
+
+      // Handle duplication checks
+      if (action === "favorites" && existingFilm?.isFavorite) {
+        return {
+          success: false,
+          message: `${filmData.title} is already in your favorites`,
+        };
+      }
+
+      if (action === "watchlist" && existingFilm?.isWatchlist) {
+        return {
+          success: false,
+          message: `${filmData.title} is already in your watchlist`,
+        };
+      }
+
+      // Prepare update object based on action
+      const updateData = {
+        title: filmData.title,
+        mediaType: filmData.mediaType,
+        posterImage: filmData.posterImage,
+        year: filmData.year,
+        rating: filmData.rating,
+        updated_at: new Date(),
+        ...(action === "favorites"
+          ? { isFavorite: true }
+          : { isWatchlist: true }),
+      };
 
       await db
         .insert(userFilms)
@@ -86,15 +119,7 @@ export const addToUserList = cache(
         })
         .onConflictDoUpdate({
           target: [userFilms.userId, userFilms.tmdbId],
-          set: {
-            [action]: true,
-            title: filmData.title,
-            mediaType: filmData.mediaType,
-            posterImage: filmData.posterImage,
-            year: filmData.year,
-            rating: filmData.rating,
-            updated_at: new Date(),
-          },
+          set: updateData,
         });
 
       revalidateTag("user_data");
@@ -103,10 +128,12 @@ export const addToUserList = cache(
 
       return {
         success: true,
-        message: `${filmData.title} has been added to your ${action} successfully`,
+        message: `${filmData.title} has been ${
+          existingFilm ? "added to" : "updated in"
+        } your ${action} successfully`,
       };
     } catch (error) {
-      console.log(`An error occured: ${error}`);
+      console.error(`An error occurred: ${error}`);
       return {
         success: false,
         message: "An error occurred on the server",
