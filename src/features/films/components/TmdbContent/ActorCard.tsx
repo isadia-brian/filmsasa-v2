@@ -3,21 +3,21 @@
 import Image from "next/image";
 
 const ActorCard = (props: {
-  actor: { profile_path: string; name: string; character: string };
+  actor: { profile_path: string; name: string; character?: string };
 }) => {
   const { actor } = props;
   const { profile_path, name, character } = actor;
   const returnedImage = profile_path;
   const fullname = name?.split(" ");
-  const characterName = character?.split(" ");
+  const characterName = character?.split(" ") ?? [];
 
   const twoNames =
     fullname?.length > 2 ? fullname.slice(0, 2).join(" ") : fullname.join(" ");
 
   const oneCharacterName =
     characterName?.length > 2
-      ? characterName.slice(0, 1).join(" ")
-      : characterName.join(" ");
+      ? characterName?.slice(0, 1).join(" ")
+      : characterName?.join(" ");
 
   const imageBaseUrl = `https://image.tmdb.org/t/p/w185`;
   let ImageUrl: string | null = null;

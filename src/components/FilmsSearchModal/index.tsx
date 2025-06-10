@@ -13,6 +13,11 @@ const FilmsSearchModal = () => {
   const [tv, setTv] = useState([]);
   const [people, setPeople] = useState([]);
 
+  const handleClose = () => {
+    setSearchValue("");
+    setIsOpen(false);
+  };
+
   const handleSearch = useCallback(async () => {
     const searchTerm = searchValue.trim();
     if (!searchTerm) {
@@ -72,20 +77,22 @@ const FilmsSearchModal = () => {
 
   return (
     <div>
-      <Button
+      <button
+        type="button"
         onClick={() => setIsOpen(true)}
         className="rounded-full cursor-pointer h-[32px] w-[32px] bg-slate-200 hover:bg-slate-50 hover:text-black flex items-center px-0 py-0 justify-center"
       >
-        <SearchIcon className="text-black" />
-      </Button>
+        <SearchIcon className="text-black text-xl" size={18} />
+      </button>
       {isOpen && (
         <div className="fixed inset-0 pt-20 md:pt-28 z-2000 bg-black/90 backdrop-blur-md no-scrollbar w-full overflow-y-auto">
-          <div
-            className="absolute top-4 right-4 flex items-center justify-center bg-red-600 rounded-full h-6 w-6 md:h-10 md:w-10"
-            onClick={() => setIsOpen(false)}
+          <button
+            type="button"
+            className="absolute hover:bg-red-600 hover:text-white transition-colors top-4 right-4 flex items-center justify-center bg-red-500 rounded-full h-6 w-6 md:h-10 md:w-10"
+            onClick={handleClose}
           >
-            <X />
-          </div>
+            <X size={20} />
+          </button>
 
           <div className=" mx-4 md:mx-20 flex flex-col-reverse md:flex-col gap-10 h-full pb-8 ">
             <input

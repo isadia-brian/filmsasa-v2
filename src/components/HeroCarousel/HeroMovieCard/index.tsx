@@ -198,7 +198,7 @@ const RenderLink = ({
 
     return (
       <Link
-        prefetch={true}
+        prefetch={false}
         href={{
           pathname: link,
         }}

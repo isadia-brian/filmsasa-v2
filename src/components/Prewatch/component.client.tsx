@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
-import { Heart, PlayIcon, PlusIcon, Youtube as Tube } from "lucide-react";
+import { Heart, PlayIcon, PlusIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { aquire } from "@/app/fonts";
@@ -130,7 +130,7 @@ const PrewatchClient = (props: {
         "
           />
         </div>
-        <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
+        <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/90 via-black/40 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
           <div className="w-full flex justify-between items-center z-[1000]">
             <h4
               className={`${aquire.className} text-4xl md:text-7xl max-w-[250px] md:max-w-[500px]`}
@@ -148,6 +148,7 @@ const PrewatchClient = (props: {
 
           <div className="md:absolute md:z-[1500]  md:h-full md:top-0  flex items-center justify-center md:left-[50%] md:-translate-x-1/2 md:w-fit">
             <Link
+              prefetch={false}
               href={{
                 pathname: `/watch`,
                 query: { media: mediaType, id: film?.tmdbId },
@@ -197,7 +198,22 @@ const PrewatchClient = (props: {
               className="transition-colors flex items-center justify-center gap-2  bg-red-500 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-red-500 text-sm hover:bg-white hover:text-black hover:border-white"
             >
               <span>
-                <Tube className="h-4 w-4" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-youtube h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"></path>
+                  <path d="m10 15 5-3-5-3z"></path>
+                </svg>
               </span>
               Watch Trailer
             </button>

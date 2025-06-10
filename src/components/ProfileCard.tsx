@@ -5,10 +5,28 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { User } from "@/types";
 import { logout } from "@/features/auth/server/actions";
+import { usePathname, useRouter } from "next/navigation";
 
 const UserAvatar = dynamic(() => import("./UserAvatar"));
 
 const ProfileCard = ({ user }: { user: User }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (!user) {
+      return;
+    }
+    const response = await logout();
+    if (response.success === true) {
+      if (pathname === "/") {
+        router.refresh();
+      } else {
+        router.push("/");
+      }
+    }
+  };
+
   if (!user) {
     return (
       <div className="relative rounded-xl w-[250px] bg-slate-200  px-2 py-2 flex flex-col gap-2">
@@ -35,7 +53,8 @@ const ProfileCard = ({ user }: { user: User }) => {
       <div className="px-2 py-2 text-sm">
         <div className="flex flex-col gap-1">
           <Link
-            href={`#`}
+            href="/account/lists"
+            prefetch={false}
             className="flex items-center gap-2 py-3  px-2 transition-colors group hover:bg-neutral-300 hover:text-neutral-950 rounded-lg"
           >
             <span>
@@ -72,7 +91,7 @@ const ProfileCard = ({ user }: { user: User }) => {
       </div>
       <div className="px-2 pt-1.5 pb-2  w-full">
         <button
-          onClick={async () => await logout()}
+          onClick={handleLogout}
           type="button"
           className=" text-sm  w-full py-3 items-center bg-neutral-600 text-neutral-100 cursor-pointer rounded-lg"
         >

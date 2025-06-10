@@ -5,9 +5,11 @@ import { User as LucideUser } from "lucide-react";
 const UserAvatar = ({ user, size }: { user: User; size?: string }) => {
   if (!user) {
     return (
-      <Avatar className={`bg-white${size === "lg" ? "h-10 w-10" : ""}`}>
+      <Avatar
+        className={`bg-white ${size === "lg" ? "h-10 w-10" : "h-[32px] w-[32px]"}`}
+      >
         <AvatarFallback>
-          <LucideUser className="h-full" size={20} color="black" />
+          <LucideUser size={18} color="black" />
         </AvatarFallback>
       </Avatar>
     );

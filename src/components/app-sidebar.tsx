@@ -13,7 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import AdminLogo from "./admin-logo";
+import SiteLogo from "./site-logo";
 
 // This is sample data.
 const data = {
@@ -83,7 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <AdminLogo />
+        <SiteLogo />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

@@ -7,6 +7,17 @@ import { and, desc, eq, or } from "drizzle-orm";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { cache } from "react";
 
+type UserListData =
+  | {
+      tmdbId: number;
+      title: string;
+      rating: number | null;
+      year: number | null;
+      mediaType: "movie" | "tv";
+      posterImage: string | null;
+    }[]
+  | null;
+
 const getUser = async (userId: number) => {
   return await db.query.users.findFirst({
     where: eq(users.id, userId),
@@ -14,7 +25,9 @@ const getUser = async (userId: number) => {
 };
 
 export const fetchUserData = unstable_cache(
-  async (userId: number) => {
+  async (
+    userId: number,
+  ): Promise<{ favorites: UserListData; watchlist: UserListData } | null> => {
     const existingUser = await db.query.users.findFirst({
       where: eq(users.id, userId),
 
@@ -33,26 +46,30 @@ export const fetchUserData = unstable_cache(
 
     //separate favourites and watchlist
 
-    const favorites = existingUser.userFilms.filter((uf) => uf.isFavorite);
-    const watchlist = existingUser.userFilms.filter((uf) => uf.isWatchlist);
+    const userFavorites = existingUser.userFilms.filter((uf) => uf.isFavorite);
+    const userWatchlist = existingUser.userFilms.filter((uf) => uf.isWatchlist);
+
+    const favorites = userFavorites.map((uf) => ({
+      tmdbId: uf.tmdbId,
+      title: uf.title,
+      mediaType: uf.mediaType,
+      posterImage: uf.posterImage,
+      year: uf.year,
+      rating: uf.rating,
+    }));
+
+    const watchlist = userWatchlist.map((uw) => ({
+      tmdbId: uw.tmdbId,
+      title: uw.title,
+      mediaType: uw.mediaType,
+      posterImage: uw.posterImage,
+      year: uw.year,
+      rating: uw.rating,
+    }));
 
     return {
-      favorites: favorites.map((uf) => ({
-        tmdbId: uf.tmdbId,
-        title: uf.title,
-        mediaType: uf.mediaType,
-        posterImage: uf.posterImage,
-        year: uf.year,
-        rating: uf.rating,
-      })),
-      watchlist: watchlist.map((uf) => ({
-        tmdbId: uf.tmdbId,
-        title: uf.title,
-        mediaType: uf.mediaType,
-        posterImage: uf.posterImage,
-        year: uf.year,
-        rating: uf.rating,
-      })),
+      favorites,
+      watchlist,
     };
   },
   ["user_data"],

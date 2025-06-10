@@ -7,7 +7,7 @@ const Prewatch = async ({
   tmdbId,
   mediaType,
 }: {
-  mediaType: string;
+  mediaType: "movie" | "tv";
   tmdbId: number;
   kidsPage?: boolean;
 }) => {

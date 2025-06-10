@@ -75,7 +75,7 @@ export interface FilmDetails {
   posterImage: string;
   backdropImage: string;
   year: number;
-  mediaType: string;
+  mediaType: "movie" | "tv";
   vote_average: number;
   runtime?: string;
   recommendations:

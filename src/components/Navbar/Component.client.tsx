@@ -109,7 +109,7 @@ const NavbarClient = ({ user }: { user: User }) => {
           <div className="flex items-center gap-[1ch]">
             <Link
               href="/"
-              prefetch={true}
+              prefetch={false}
               className={`text-xl font-black text-red-500 transition duration-300 ease-in-out ${
                 scrolled ? "opacity-0" : "opacity-100"
               }`}

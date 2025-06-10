@@ -7,7 +7,7 @@ const page = async ({ params }: { params: Promise<{ tmdbId: string }> }) => {
 
   return (
     <div className="w-full text-slate-200 relative">
-      <Prewatch mediaType={media_type} tmdbId={filmId} />
+      <Prewatch kidsPage={true} mediaType={media_type} tmdbId={filmId} />
     </div>
   );
 };

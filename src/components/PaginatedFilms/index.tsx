@@ -45,7 +45,7 @@ const PaginatedFilms = ({
               className="transition ease-in-out flex flex-col gap-2 cursor-pointer md:hover:-translate-y-5 "
             >
               <Link
-                prefetch={true}
+                prefetch={false}
                 href={link}
                 className="relative flex flex-col space-y-3"
               >

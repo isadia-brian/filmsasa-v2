@@ -16,7 +16,7 @@ const FilmCard: React.FC<FilmCardProps> = (props) => {
   return (
     <Link
       href={cardLink}
-      prefetch={true}
+      prefetch={false}
       className={`relative flex flex-col gap-2 rounded-t-(--card-radius) cursor-pointer transition ease-in-out  duration-300 md:hover:-translate-y-5 ${section ? "min-w-[110px] md:min-w-[190px]" : ""} [--card-radius:var(--radius-lg)]`}
     >
       <div
