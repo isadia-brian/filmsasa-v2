@@ -9,8 +9,6 @@ import {
   Heart,
   Flame,
   AlignHorizontalJustifyStart,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 
 import dynamic from "next/dynamic";

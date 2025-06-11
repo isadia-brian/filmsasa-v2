@@ -1,6 +1,8 @@
 import { fetchSectionFilms } from "@/features/tmdb/server/actions/films";
-import ContentSection from "./Component.client";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
+
+const ContentSection = dynamic(() => import("./Component.client"));
 
 const CategoryGrid = async () => {
   const allFilms = await fetchSectionFilms();

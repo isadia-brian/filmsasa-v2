@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "uxlqgllrc8f85g5q.public.blob.vercel-storage.com",
-        port: "",
       },
       {
         protocol: "https",
@@ -18,7 +17,7 @@ const nextConfig: NextConfig = {
         hostname: "github.com",
       },
     ],
-    //minimumCacheTTL: 31536000,
+    minimumCacheTTL: 3600,
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -27,7 +26,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev"],
+  allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev", "192.168.0.34"],
   experimental: {
     optimizePackageImports: [
       "drizzle-orm",
@@ -45,7 +44,11 @@ const nextConfig: NextConfig = {
       "lucide-react",
       "dotenv",
     ],
+    webpackMemoryOptimizations: true,
+    serverSourceMaps: false,
+    preloadEntriesOnStart: false,
   },
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;
