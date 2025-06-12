@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { ObservedTransition } from "./ObservedTransition";
 import styles from "./HeroMovieCard.module.css";

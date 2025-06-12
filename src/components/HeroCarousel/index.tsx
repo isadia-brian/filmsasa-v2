@@ -4,9 +4,11 @@ import { fetchCarouselFilms } from "@/features/films/server/db/films";
 import { getUser } from "@/lib/dal";
 
 export const HeroCarousel = async () => {
-  const { films: data } = await fetchCarouselFilms();
+  const [{ films: data }, user] = await Promise.all([
+    fetchCarouselFilms(),
+    getUser(),
+  ]);
 
-  const user = await getUser();
   const userId = user?.id;
   const films = data;
 
@@ -24,7 +26,7 @@ export const HeroCarousel = async () => {
         <HeroMovieCard
           film={film}
           key={film.tmdbId}
-          priorityLoad={index < 4}
+          priorityLoad={index < 8}
           userId={userId}
         />
       ))}
