@@ -114,3 +114,47 @@ export interface FilmDetails {
       | null;
   } | null;
 }
+
+export interface MappedFilm {
+  id: number;
+  title: string | null;
+  poster_path: string | null;
+  year?: number;
+  vote_average: number;
+  rating: number;
+  genres?: string[];
+  overview: string;
+  media_type?: string;
+  profile_path?: string;
+}
+
+export interface FilmByName {
+  id: number;
+  poster_path: string;
+  name: string;
+  title: string;
+  vote_average: string;
+  release_date: string;
+  first_air_date: string;
+}
+
+export interface SearchContent {
+  id: number;
+  poster_path?: string;
+  name?: string;
+  profile_path?: string;
+  title?: string;
+  media_type: string;
+}
+
+export interface FeaturedFilms {
+  id: number;
+  poster_path: string;
+  name?: string;
+  title?: string;
+  vote_average: string;
+  release_date?: string;
+  first_air_date?: string;
+  genre_ids?: number[];
+  overview: string;
+}

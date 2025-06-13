@@ -4,7 +4,7 @@ const YoutubePlayer = (props: {
   toggleYoutube: () => void;
   title: string | undefined;
 }) => {
-  const { officialTrailer, toggleYoutube, title, videoId } = props;
+  const { officialTrailer, toggleYoutube, videoId } = props;
 
   return (
     <div className="fixed inset-0 flex flex-col gap-8 py-12 md:py-0 md:justify-center items-center backdrop-blur-md z-[2000]">
@@ -21,7 +21,6 @@ const YoutubePlayer = (props: {
           width="100%"
           height="100%"
           loading="lazy"
-          title={title}
           allow="fullscreen"
           src={`${officialTrailer}?playlist=${videoId}&loop=1&autoplay=1`}
         ></iframe>

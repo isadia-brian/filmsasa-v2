@@ -1,6 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { cache, RefObject } from "react";
 import { twMerge } from "tailwind-merge";
+import { convertYear } from "./formatters";
+import { MappedFilm } from "@/types/films";
+import { genres } from "@/data/genres";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -101,3 +104,40 @@ export const scrollContainer = (
     }
   }
 };
+
+export const mapFilmResults = (film: any): MappedFilm => {
+  // Handle both movie and TV show titles
+  const title =
+    typeof film.title === "string"
+      ? film.title
+      : typeof film.name === "string"
+        ? film.name
+        : null;
+
+  // Handle both movie and TV show dates
+  const releaseDate = film.release_date || film.first_air_date || "";
+
+  // Convert genres using genreMap
+  const genres = film.genre_ids
+    ?.map((id: number) => genreMap.get(id))
+    .filter((name: string | undefined): name is string => name !== undefined);
+
+  return {
+    id: film.id,
+    title,
+    poster_path: film.poster_path,
+    year: releaseDate ? convertYear(releaseDate) : 0,
+    vote_average: film.vote_average,
+    rating: Math.round(film.vote_average * 10) / 10,
+    genres: genres || [],
+    overview: film.overview || "",
+    media_type: film.media_type || null,
+    profile_path: film.poster_path || null,
+  };
+};
+
+// Map for genre ID to name lookup
+export const genreMap = new Map<number, string>();
+genres.forEach((genre) => {
+  genreMap.set(genre.id, genre.name);
+});

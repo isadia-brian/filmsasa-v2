@@ -2,90 +2,43 @@
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { FilmDetails, TMDBFilm } from "@/types/films";
+import {
+  FeaturedFilms,
+  FilmByName,
+  FilmDetails,
+  SearchContent,
+  TMDBFilm,
+} from "@/types/films";
 import { convertMinutes, convertYear } from "@/lib/formatters";
-import { posterURL } from "@/lib/utils";
+import { mapFilmResults, posterURL } from "@/lib/utils";
 
 const baseUrl: string = `https://api.themoviedb.org/3`;
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
-export const searchFilmByName = async (
-  media_type: "movie" | "tv",
-  query: string,
-) => {
-  const response = await fetch(
-    `${baseUrl}/search/${media_type}?query=${encodeURIComponent(
-      query,
-    )}&include_adult=false&language=en-US&page=1&api_key=${TMDB_API_KEY}`,
-  );
+export const searchFilmByName = cache(
+  async (media_type: "movie" | "tv", query: string) => {
+    const response = await fetch(
+      `${baseUrl}/search/${media_type}?query=${encodeURIComponent(
+        query,
+      )}&include_adult=false&language=en-US&page=1&api_key=${TMDB_API_KEY}`,
+    );
 
-  const { results } = await response.json();
-  return results
-    .map(
-      ({
-        id,
-        poster_path,
-        title,
-        name,
-        vote_average,
-        profile_path,
-        release_date,
-        first_air_date,
-      }: {
-        id: string;
-        poster_path: string;
-        name: string;
-        profile_path: string;
-        title: string;
-        vote_average: string;
-        release_date: string;
-        first_air_date: string;
-      }) => ({
-        id,
-        poster_path,
-        title,
-        name,
-        profile_path,
-        vote_average,
-        release_date,
-        first_air_date,
-      }),
-    )
-    .filter(({ vote_average }: { vote_average: number }) => vote_average > 0);
-};
+    const { results } = await response.json();
+    return results
+      .map((film: FilmByName) => mapFilmResults(film))
+      .filter(({ vote_average }: { vote_average: number }) => vote_average > 0);
+  },
+);
 
-export async function searchContent(query: string) {
+export const searchContent = cache(async (query: string) => {
   const response = await fetch(
     `${baseUrl}/search/multi?query=${encodeURIComponent(
       query,
     )}&include_adult=false&language=en-US&page=1&api_key=${TMDB_API_KEY}`,
   );
   const { results } = await response.json();
-  return results.map(
-    ({
-      id,
-      poster_path,
-      title,
-      name,
-      media_type,
-      profile_path,
-    }: {
-      id: string;
-      poster_path: string;
-      name?: string;
-      title?: string;
-      media_type: string;
-      profile_path?: string;
-    }) => ({
-      id,
-      poster_path,
-      title,
-      media_type,
-      name,
-      profile_path,
-    }),
-  );
-}
+  return results.map((film: SearchContent) => mapFilmResults(film));
+});
 
 export const fetchFeatured = cache(
   async (mediaType: "movie" | "tv", page: number) => {
@@ -106,49 +59,7 @@ export const fetchFeatured = cache(
       if (!results) return;
 
       return results
-        .map(
-          ({
-            id,
-            poster_path,
-            backdrop_path,
-            title,
-            release_date,
-            first_air_date,
-            overview,
-            name,
-            vote_average,
-            genre_ids = [],
-          }: {
-            id: number;
-            poster_path: string;
-            title?: string;
-            name?: string;
-            overview: string;
-            backdrop_path: string;
-            release_date?: string;
-            first_air_date?: string;
-            vote_average: number;
-            genre_ids?: number[];
-          }) => ({
-            tmdbId: id,
-            title: typeof title === "string" ? title : name,
-            poster_path,
-            backdrop_path,
-            mediaType,
-            year:
-              typeof release_date === "string"
-                ? convertYear(release_date)
-                : typeof first_air_date === "string"
-                  ? convertYear(first_air_date)
-                  : 0,
-            vote_average,
-            rating: Math.round(vote_average * 10) / 10,
-            genres: genre_ids
-              .map((id) => genreMap.get(id)) //convert id to name
-              .filter((name): name is string => name !== undefined),
-            overview,
-          }),
-        )
+        .map((film: FeaturedFilms) => mapFilmResults(film))
         .filter(
           ({ vote_average }: { vote_average: number }) => vote_average >= 5,
         );
@@ -174,51 +85,7 @@ export const fetchPopular = cache(
       if (!results) return;
 
       return results
-        .map(
-          ({
-            id,
-            poster_path,
-            backdrop_path,
-            title,
-            release_date,
-            first_air_date,
-            overview,
-            name,
-            vote_average,
-            genre_ids = [],
-          }: {
-            id: number;
-            poster_path: string;
-            title?: string;
-            name?: string;
-            overview: string;
-            backdrop_path: string;
-            release_date?: string;
-            first_air_date?: string;
-            vote_average: number;
-            genre_ids?: number[];
-          }) => ({
-            tmdbId: id,
-            title: typeof title === "string" ? title : name,
-            poster_path,
-            backdrop_path,
-            mediaType,
-            release_date,
-            first_air_date,
-            year:
-              typeof release_date === "string"
-                ? convertYear(release_date)
-                : typeof first_air_date === "string"
-                  ? convertYear(first_air_date)
-                  : 0,
-            vote_average,
-            rating: Math.round(vote_average * 10) / 10,
-            genres: genre_ids
-              .map((id) => genreMap.get(id)) //convert id to name
-              .filter((name): name is string => name !== undefined),
-            overview,
-          }),
-        )
+        .map((film: FeaturedFilms) => mapFilmResults(film))
         .filter(
           ({ vote_average }: { vote_average: number }) => vote_average >= 5,
         );
@@ -535,7 +402,9 @@ export const fetchFilmDetails = cache(
   async ({ mediaType, tmdbId }: { mediaType: string; tmdbId: number }) => {
     try {
       const response = await fetch(
-        `${baseUrl}/${mediaType}/${tmdbId}?append_to_response=recommendations,${mediaType === "tv" ? "aggregate_credits" : "credits"},videos&api_key=${TMDB_API_KEY}`,
+        `${baseUrl}/${mediaType}/${tmdbId}?append_to_response=recommendations,${
+          mediaType === "tv" ? "aggregate_credits" : "credits"
+        },videos&api_key=${TMDB_API_KEY}`,
       );
       const film = await response.json();
 
@@ -648,16 +517,17 @@ export const fetchFilmDetails = cache(
   },
 );
 
-const fetchSeriesData = async (
+export const fetchSeriesData = async (
   media_type: "tv",
   seasons: number,
   tmdbId: number,
-) => {
-  let tvData: FilmDetails["seriesData"] | null = {
+): Promise<FilmDetails["seriesData"] | null> => {
+  const tvData: FilmDetails["seriesData"] = {
     seasons: null,
     episodes: [],
   };
-  const urls = Array.from(
+
+  const seasonUrls = Array.from(
     { length: seasons },
     (_, i) =>
       `${baseUrl}/${media_type}/${tmdbId}/season/${
@@ -666,131 +536,57 @@ const fetchSeriesData = async (
   );
 
   try {
-    for (let i = 0; i < urls.length; i++) {
-      try {
-        const response = await fetch(urls[i]);
-        if (!response.ok) {
-          console.log(
-            `Error fetching response: HTTP ${response.status} - ${response.statusText}`,
-          );
-        }
-        const { episodes } = await response.json();
+    // Fetch all seasons in parallel
+    const seasonResponses = await Promise.all(
+      seasonUrls.map((url) =>
+        fetch(url).catch((err) => {
+          console.error(`Season fetch failed: ${err.message}`);
+          return null;
+        }),
+      ),
+    );
 
-        if (episodes) {
-          const data = episodes.map(
-            ({
-              episode_number,
-              id,
-              name,
-              still_path,
-              season_number,
-            }: {
-              episode_number: number;
-              id: number;
-              name: string;
-              still_path: string;
-              season_number: number;
-            }) => ({ episode_number, id, name, still_path, season_number }),
-          );
+    // Process responses in parallel
+    const episodeDataPromises = seasonResponses
+      .filter((response): response is Response => response !== null)
+      .map(async (response) => {
+        try {
+          const { episodes } = await response.json();
 
-          tvData.episodes?.push(...data);
+          if (episodes?.length > 0) {
+            return episodes.map(
+              (episode: {
+                episode_number: number;
+                id: number;
+                name: string;
+                still_path: string;
+                season_number: number;
+              }) => ({
+                episode_number: episode.episode_number,
+                id: episode.id,
+                name: episode.name,
+                still_path: episode.still_path,
+                season_number: episode.season_number,
+              }),
+            );
+          }
+          return [];
+        } catch (error) {
+          console.error(`Episode processing failed: ${error}`);
+          return [];
         }
-      } catch (error) {
-        console.log(`An error occurred: ${error}`);
-      }
-    }
+      });
+
+    // Wait for all episode processing to complete
+    const allEpisodeData = await Promise.all(episodeDataPromises);
+
+    // Flatten and assign results
+    tvData.episodes = allEpisodeData.flat();
     tvData.seasons = seasons;
 
     return tvData;
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.error(`Critical series data fetch error: ${error}`);
+    return null;
   }
 };
-
-const genres = [
-  {
-    id: 28,
-    name: "Action",
-  },
-  {
-    id: 12,
-    name: "Adventure",
-  },
-
-  {
-    id: 28,
-    name: "Action",
-  },
-  {
-    id: 12,
-    name: "Adventure",
-  },
-
-  {
-    id: 10759,
-    name: "Action & Adventure",
-  },
-  {
-    id: 35,
-    name: "Comedy",
-  },
-  {
-    id: 80,
-    name: "Crime",
-  },
-  {
-    id: 27,
-    name: "Horror",
-  },
-  {
-    id: 10402,
-    name: "Music",
-  },
-  {
-    id: 18,
-    name: "Drama",
-  },
-  {
-    id: 10751,
-    name: "Family",
-  },
-  {
-    id: 10749,
-    name: "Romance",
-  },
-  {
-    id: 878,
-    name: "Science Fiction",
-  },
-  {
-    id: 10770,
-    name: "TV Movie",
-  },
-  {
-    id: 53,
-    name: "Thriller",
-  },
-  {
-    id: 9648,
-    name: "Mystery",
-  },
-  {
-    id: 10765,
-    name: "Sci-Fi & Fantasy",
-  },
-  {
-    id: 10766,
-    name: "Soap",
-  },
-  {
-    id: 37,
-    name: "Western",
-  },
-];
-
-// Map for genre ID to name lookup
-const genreMap = new Map<number, string>();
-genres.forEach((genre) => {
-  genreMap.set(genre.id, genre.name);
-});
