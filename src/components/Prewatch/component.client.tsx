@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { aquire } from "@/app/fonts";
 import { addToUserList } from "@/features/users/server/db";
-import { FilmData, FilmDetails } from "@/types/films";
+import { FilmData } from "@/types/films";
 import { useRouter } from "next/navigation";
 import { posterURL } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -121,7 +121,7 @@ const PrewatchClient = (props: {
             src={`https://image.tmdb.org/t/p/w1280${backdropImage}`}
             alt={title}
             fill
-            quality={80}
+            quality={75}
             className="object-cover"
             priority={true}
             loading="eager"

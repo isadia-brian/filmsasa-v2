@@ -12,8 +12,8 @@ const UserLists = async () => {
 
   const data = await fetchUserData(user.id);
 
-  const favoriteFilms = data?.favorites || [];
   const watchlistFilms = data?.watchlist || [];
+  const favoriteFilms = data?.favorites || [];
 
   return (
     <div className="flex flex-col gap-8">
