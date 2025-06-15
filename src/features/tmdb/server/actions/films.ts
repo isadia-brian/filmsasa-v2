@@ -365,6 +365,7 @@ export const fetchSectionFilms = unstable_cache(
 export const fetchTmdbData = cache(
   async (tmdbId: number, mediaType: "movie" | "tv") => {
     const url = `${baseUrl}/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
+
     const response = await fetch(url);
 
     if (!response.ok) {

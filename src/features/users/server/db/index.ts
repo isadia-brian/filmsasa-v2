@@ -54,6 +54,7 @@ export const fetchUserData = unstable_cache(
       title: uf.title,
       mediaType: uf.mediaType,
       posterImage: uf.posterImage,
+      tmdbPosterUrl: uf.tmdbPosterUrl,
       year: uf.year,
       rating: uf.rating,
     }));
@@ -63,6 +64,7 @@ export const fetchUserData = unstable_cache(
       title: uw.title,
       mediaType: uw.mediaType,
       posterImage: uw.posterImage,
+      tmdbPosterUrl: uw.tmdbPosterUrl,
       year: uw.year,
       rating: uw.rating,
     }));
@@ -117,6 +119,7 @@ export const addToUserList = cache(
         title: filmData.title,
         mediaType: filmData.mediaType,
         posterImage: filmData.posterImage,
+        tmdbPosterUrl: filmData.tmdbPosterUrl,
         year: filmData.year,
         rating: filmData.rating,
         updated_at: new Date(),
@@ -141,7 +144,7 @@ export const addToUserList = cache(
 
       revalidateTag("user_data");
       revalidatePath("/");
-      revalidatePath(`/account/${action}`);
+      revalidatePath(`/account/lists`);
 
       return {
         success: true,
@@ -164,53 +167,79 @@ export const removeFromUserList = cache(
     userId: number,
     tmdbId: number,
     action: "favorites" | "watchlist",
+    filmTitle: string,
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      await db.transaction(async (tx) => {
-        // Get current state
-        const current = await tx.query.userFilms.findFirst({
-          where: and(
-            eq(userFilms.userId, userId),
-            eq(userFilms.tmdbId, tmdbId),
-          ),
-        });
-
-        if (!current)
-          return {
-            success: false,
-            message: "The film is not in your lists",
-          };
-
-        // Calculate new values
-        const newState = {
-          isFavorite: action === "favorites" ? false : current.isFavorite,
-          isWatchlist: action === "watchlist" ? false : current.isWatchlist,
+      const existingUser = await getUser(userId);
+      if (!existingUser) {
+        return {
+          success: false,
+          message: "Please sign in or sign up to modify your lists",
         };
+      }
 
-        // Delete if both flags are false, otherwise update
-        if (!newState.isFavorite && !newState.isWatchlist) {
-          await tx
-            .delete(userFilms)
-            .where(
-              and(eq(userFilms.userId, userId), eq(userFilms.tmdbId, tmdbId)),
-            );
-        } else {
-          await tx
-            .update(userFilms)
-            .set({ ...newState, updated_at: new Date() })
-            .where(
-              and(eq(userFilms.userId, userId), eq(userFilms.tmdbId, tmdbId)),
-            );
-        }
+      // Find existing user-film relationship
+      const existingFilm = await db.query.userFilms.findFirst({
+        where: and(eq(userFilms.userId, userId), eq(userFilms.tmdbId, tmdbId)),
       });
+
+      // Validate existence in target list
+      if (!existingFilm) {
+        return {
+          success: false,
+          message: `${filmTitle} is not in your ${action}`,
+        };
+      }
+
+      if (action === "favorites" && !existingFilm.isFavorite) {
+        return {
+          success: false,
+          message: `${filmTitle} is not in your favorites`,
+        };
+      }
+
+      if (action === "watchlist" && !existingFilm.isWatchlist) {
+        return {
+          success: false,
+          message: `${filmTitle} is not in your watchlist`,
+        };
+      }
+
+      // Prepare update data
+      const updateData = {
+        updated_at: new Date(),
+        ...(action === "favorites"
+          ? { isFavorite: false }
+          : { isWatchlist: false }),
+      };
+
+      // Check if we should delete the record entirely
+      const willDelete =
+        (action === "favorites" && !existingFilm.isWatchlist) ||
+        (action === "watchlist" && !existingFilm.isFavorite);
+
+      if (willDelete) {
+        // Delete record if it will have no list associations
+        await db.delete(userFilms).where(eq(userFilms.id, existingFilm.id));
+      } else {
+        // Otherwise update the record
+        await db
+          .update(userFilms)
+          .set(updateData)
+          .where(eq(userFilms.id, existingFilm.id));
+      }
+
+      // Revalidate cached data
       revalidateTag("user_data");
-      revalidatePath(`/account/${action}`);
+      revalidatePath("/");
+      revalidatePath(`/account/lists`);
+
       return {
         success: true,
-        message: `${userFilms.title} has been deleted successfully`,
+        message: `${filmTitle} has been removed from your ${action}`,
       };
     } catch (error) {
-      console.log(`An error occured: ${error}`);
+      console.error(`An error occurred: ${error}`);
       return {
         success: false,
         message: "An error occurred on the server",

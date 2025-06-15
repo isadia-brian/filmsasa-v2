@@ -61,6 +61,7 @@ const PrewatchClient = (props: {
             title,
             mediaType,
             posterImage: posterURL(posterImage),
+            tmdbPosterUrl: posterImage,
           };
           const response = await addToUserList(userId, tmdbId, action, film);
           const { success, message } = response;

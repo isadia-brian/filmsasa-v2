@@ -252,6 +252,7 @@ export const fetchFeatured = cache(async () => {
 export async function insertFilmFromTmdb(
   tmdbFilm: TMDBFilmData,
   category: string,
+  mediaType: "movie" | "tv",
 ) {
   try {
     return await db.transaction(async (tx) => {
@@ -291,7 +292,7 @@ export async function insertFilmFromTmdb(
       // Process new film (only when needed)
 
       // ... (prepareFilmData implementation from below) ...
-      const filmData = await prepareFilmData(tmdbFilm);
+      const filmData = await prepareFilmData(tmdbFilm, mediaType);
 
       const [newFilm] = await tx.insert(films).values(filmData).returning();
       await tx.insert(filmCategories).values({
@@ -315,9 +316,12 @@ export async function insertFilmFromTmdb(
 }
 
 // --- Helper Functions ---
-async function prepareFilmData(tmdbFilm: TMDBFilmData): Promise<InsertFilm> {
+async function prepareFilmData(
+  tmdbFilm: TMDBFilmData,
+  mediaType: "movie" | "tv",
+): Promise<InsertFilm> {
   const [tmdbData, posterBlob, backdropBlob] = await Promise.all([
-    fetchTmdbData(tmdbFilm.tmdbId, tmdbFilm.mediaType),
+    fetchTmdbData(tmdbFilm.tmdbId, mediaType),
     fetchTmdbImage(tmdbFilm.poster_path, "w500"),
     fetchTmdbImage(tmdbFilm.backdrop_path, "w1280"),
   ]);
@@ -332,17 +336,17 @@ async function prepareFilmData(tmdbFilm: TMDBFilmData): Promise<InsertFilm> {
     tmdbId: tmdbFilm.tmdbId,
     title: tmdbFilm.title,
     overview: tmdbFilm.overview,
-    contentType: tmdbFilm.mediaType,
-    mediaType: tmdbFilm.mediaType,
+    contentType: mediaType,
+    mediaType: mediaType,
     genres: tmdbFilm.genres,
     year: tmdbFilm.year,
     posterImage: vercelPosterImage,
     backdropImage: vercelBackdropImage,
+    tmdbPosterUrl: tmdbFilm.poster_path,
     rating: Math.round(tmdbFilm.rating),
-    seasons: tmdbFilm.mediaType === "tv" ? tmdbData.number_of_seasons : null,
-    runtime:
-      tmdbFilm.mediaType === "movie" ? convertMinutes(tmdbData.runtime) : null,
-    quality: tmdbFilm.mediaType === "movie" ? "HD" : null,
+    seasons: mediaType === "tv" ? tmdbData.number_of_seasons : null,
+    runtime: mediaType === "movie" ? convertMinutes(tmdbData.runtime) : null,
+    quality: mediaType === "movie" ? "HD" : null,
   };
 }
 

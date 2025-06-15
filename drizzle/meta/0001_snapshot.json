@@ -1,6 +1,6 @@
 {
-  "id": "4a8cef28-8b15-4ef4-9b16-dd5f4f432ed6",
-  "prevId": "3f88d24c-0057-42b3-828b-40b7726d2ed3",
+  "id": "4fa4cc6a-364c-4824-9a1d-562669e0bf3b",
+  "prevId": "21286810-063a-4bb6-b750-66664d330a2b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -192,6 +192,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "tmdb_poster_url": {
+          "name": "tmdb_poster_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "rating": {
           "name": "rating",
           "type": "integer",
@@ -338,6 +344,12 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
+        },
+        "tmdb_poster_url": {
+          "name": "tmdb_poster_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
         },
         "year": {
           "name": "year",

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import DeleteFilmBtn from "./DeleteFilmBtn";
+import { posterURL } from "@/lib/utils";
 
 interface UserListProps {
   title: string;
@@ -14,10 +16,13 @@ interface UserListProps {
     posterImage: string | null;
     mediaType: "movie" | "tv";
     tmdbId: number;
+    tmdbPosterUrl: string | null;
   }[];
+  userId: number;
+  action: "favorites" | "watchlist";
 }
 
-const UserList = ({ title, films }: UserListProps) => {
+const UserList = ({ title, films, action, userId }: UserListProps) => {
   const scrollWatchListContainer = useRef<HTMLDivElement | null>(null);
 
   return (
@@ -27,7 +32,7 @@ const UserList = ({ title, films }: UserListProps) => {
         <p className="text-sm">({films.length})</p>
       </div>
       <div className=" flex flex-col gap-2 w-full">
-        <div className="flex w-full items-center justify-end gap-1">
+        <div className="flex w-full items-center justify-end gap-[6px]">
           <Button
             size={"icon"}
             className="h-8 w-8 rounded-full flex items-center bg-neutral-600 justify-center cursor-pointer"
@@ -43,34 +48,47 @@ const UserList = ({ title, films }: UserListProps) => {
         </div>
 
         <div className=" relative w-full overflow-x-scroll no-scrollbar flex space-x-2">
-          {films?.map(({ title, posterImage, mediaType, tmdbId }, index) => (
-            <Link
-              href={{
-                pathname: "/watch",
+          {films?.map(
+            (
+              { title, posterImage, tmdbPosterUrl, mediaType, tmdbId },
+              index,
+            ) => (
+              <Link
+                href={{
+                  pathname: "/watch",
 
-                query: { media: mediaType, id: tmdbId },
-              }}
-              key={index}
-              className="w-[130px] flex flex-col gap-1"
-              prefetch={false}
-            >
-              <div className="relative h-[190px] rounded-lg w-full">
-                <Image
-                  src={
-                    typeof posterImage === "string"
-                      ? posterImage
-                      : "/placeholder.webp"
-                  }
-                  alt={typeof title === "string" ? title : ""}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-              </div>
-              <p className="text-sm leading-[1.2] w-full line-clamp-2">
-                {title}
-              </p>
-            </Link>
-          ))}
+                  query: { media: mediaType, id: tmdbId },
+                }}
+                key={index}
+                className="w-[130px] flex flex-col gap-1"
+                prefetch={false}
+              >
+                <div className="relative h-[190px] rounded-lg w-full">
+                  <Image
+                    src={
+                      typeof posterImage === "string"
+                        ? posterImage
+                        : typeof tmdbPosterUrl === "string"
+                          ? posterURL(tmdbPosterUrl)
+                          : "/placeholder.webp"
+                    }
+                    alt={typeof title === "string" ? title : ""}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                  <DeleteFilmBtn
+                    userId={userId}
+                    filmTitle={title}
+                    action={action}
+                    tmdbId={tmdbId}
+                  />
+                </div>
+                <p className="text-sm leading-[1.2] w-full line-clamp-2">
+                  {title}
+                </p>
+              </Link>
+            ),
+          )}
         </div>
       </div>
     </div>

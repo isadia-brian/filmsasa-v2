@@ -55,20 +55,15 @@ const FeaturedFilms = ({
   );
 
   const PostToCategory = async (category: string, tmdbFilm: TMDBFilmData) => {
-    const result = await insertFilmFromTmdb(tmdbFilm, category);
+    const result = await insertFilmFromTmdb(tmdbFilm, category, mediaType);
 
-    if (result.action === "none") {
-      toast({
-        title: "Error",
-        variant: "destructive",
-        description: result.message,
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: result.message,
-      });
-    }
+    const { action, message } = result;
+
+    toast({
+      title: action === "none" ? "Error" : "Success",
+      variant: action === "none" ? "destructive" : "default",
+      description: message,
+    });
   };
 
   useEffect(() => {

@@ -10,15 +10,27 @@ const UserLists = async () => {
     redirect("/auth/login");
   }
 
-  const data = await fetchUserData(user.id);
+  const userId = user.id;
+
+  const data = await fetchUserData(userId);
 
   const watchlistFilms = data?.watchlist || [];
   const favoriteFilms = data?.favorites || [];
 
   return (
     <div className="flex flex-col gap-8">
-      <UserList title="WatchList" films={watchlistFilms} />
-      <UserList title="Favourites" films={favoriteFilms} />
+      <UserList
+        title="WatchList"
+        films={watchlistFilms}
+        userId={userId}
+        action="watchlist"
+      />
+      <UserList
+        title="Favourites"
+        films={favoriteFilms}
+        userId={userId}
+        action="favorites"
+      />
     </div>
   );
 };

@@ -31,6 +31,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
     overview,
     seasons,
     runtime,
+    tmdbPosterUrl,
   } = film;
   const router = useRouter();
 
@@ -51,6 +52,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
             title,
             mediaType,
             posterImage,
+            tmdbPosterUrl,
           };
           const response = await addToUserList(
             userId,

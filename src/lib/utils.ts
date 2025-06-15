@@ -123,7 +123,7 @@ export const mapFilmResults = (film: any): MappedFilm => {
     .filter((name: string | undefined): name is string => name !== undefined);
 
   return {
-    id: film.id,
+    tmdbId: film.id,
     title,
     poster_path: film.poster_path,
     year: releaseDate ? convertYear(releaseDate) : 0,
@@ -133,6 +133,7 @@ export const mapFilmResults = (film: any): MappedFilm => {
     overview: film.overview || "",
     media_type: film.media_type || null,
     profile_path: film.poster_path || null,
+    backdrop_path: film.backdrop_path || null,
   };
 };
 

@@ -4,6 +4,7 @@ import { removeCategory } from "@/features/films/server/db/films";
 import { X } from "lucide-react";
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const DeleteBtn = ({
   tmdbId,
@@ -13,6 +14,7 @@ const DeleteBtn = ({
   category: string;
 }) => {
   const { toast } = useToast();
+  const router = useRouter();
   const handleDelete = useCallback(async () => {
     const response = await removeCategory(tmdbId, category);
     if (response.success) {
@@ -20,6 +22,7 @@ const DeleteBtn = ({
         title: "Success",
         description: response.message,
       });
+      router.refresh();
     } else {
       toast({
         title: "Error",
@@ -27,7 +30,7 @@ const DeleteBtn = ({
         description: response.message,
       });
     }
-  }, [toast]);
+  }, []);
 
   return (
     <button

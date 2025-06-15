@@ -1,5 +1,5 @@
 {
-  "id": "3f88d24c-0057-42b3-828b-40b7726d2ed3",
+  "id": "21286810-063a-4bb6-b750-66664d330a2b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -143,7 +143,7 @@
         },
         "overview": {
           "name": "overview",
-          "type": "text",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -339,6 +339,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "tmdb_poster_url": {
+          "name": "tmdb_poster_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "year": {
           "name": "year",
           "type": "integer",
@@ -519,6 +525,12 @@
         "password": {
           "name": "password",
           "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image": {
+          "name": "image",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },

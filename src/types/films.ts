@@ -51,6 +51,7 @@ export interface FilmData {
   title: string;
   mediaType: "movie" | "tv";
   posterImage?: string;
+  tmdbPosterUrl: string;
   year?: number;
   rating?: number;
 }
@@ -116,7 +117,7 @@ export interface FilmDetails {
 }
 
 export interface MappedFilm {
-  id: number;
+  tmdbId: number;
   title: string | null;
   poster_path: string | null;
   year?: number;
@@ -126,10 +127,11 @@ export interface MappedFilm {
   overview: string;
   media_type?: string;
   profile_path?: string;
+  backdrop_path?: string;
 }
 
 export interface FilmByName {
-  id: number;
+  tmdbId: number;
   poster_path: string;
   name: string;
   title: string;
@@ -139,7 +141,7 @@ export interface FilmByName {
 }
 
 export interface SearchContent {
-  id: number;
+  tmdbId: number;
   poster_path?: string;
   name?: string;
   profile_path?: string;
@@ -148,7 +150,7 @@ export interface SearchContent {
 }
 
 export interface FeaturedFilms {
-  id: number;
+  tmdbId: number;
   poster_path: string;
   name?: string;
   title?: string;
@@ -157,4 +159,5 @@ export interface FeaturedFilms {
   first_air_date?: string;
   genre_ids?: number[];
   overview: string;
+  backdrop_path?: string;
 }

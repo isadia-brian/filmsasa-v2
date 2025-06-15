@@ -1,0 +1,1 @@
+ALTER TABLE "films" ADD COLUMN "tmdb_poster_url" varchar NOT NULL;
