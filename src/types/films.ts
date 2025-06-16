@@ -162,3 +162,11 @@ export interface FeaturedFilms {
   backdrop_path?: string;
 }
 
+export interface PaginatedFilmsData {
+  title?: string;
+  id: number;
+  poster_path: string;
+  name?: string;
+  year: number;
+  vote_average: number;
+}

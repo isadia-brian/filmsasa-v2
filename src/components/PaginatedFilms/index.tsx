@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { Heart, Star } from "lucide-react";
 import { posterURL } from "@/lib/utils";
-import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import { ClientPagination } from "../ClientPagination";
+import dynamic from "next/dynamic";
+import { PaginatedFilmsData } from "@/types/films";
+
+const ImageWithSkeleton = dynamic(
+  () => import("@/components/ImageWithSkeleton")
+);
 
 const PaginatedFilms = ({
   allFilms,
@@ -11,7 +16,7 @@ const PaginatedFilms = ({
   pageSize,
   media_type,
 }: {
-  allFilms: any;
+  allFilms: PaginatedFilmsData[];
   totalCount: number;
   currentPage: number;
   pageSize: number;
@@ -20,7 +25,7 @@ const PaginatedFilms = ({
   return (
     <div className="text-white w-full min-h-[70vh] relative" id="top">
       <ul className="pt-4 md:pt-6 pb-10 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full gap-x-[10px] md:gap-x-[16px] gap-y-10 lg:gap-x-[10px] md:mb-4">
-        {allFilms?.map((item: any, index: number) => {
+        {allFilms?.map((item, index: number) => {
           let link: string = "";
           const categoryTitle = media_type;
           switch (categoryTitle) {
@@ -50,24 +55,28 @@ const PaginatedFilms = ({
                 className="relative flex flex-col space-y-3"
               >
                 <div
-                  className="relative h-[160px]  md:h-[240px]   lg:h-[290px]  rounded-lg hover:rounded-md"
+                  className="relative h-[160px] md:h-[240px] lg:h-[290px] rounded-lg hover:rounded-md"
                   id="link"
                 >
-                  <ImageWithSkeleton
-                    src={
-                      typeof item.poster_path === "string"
-                        ? posterURL(item.poster_path)
-                        : "/placeholder.webp"
-                    }
-                    sizes="(max-width:640px) 100vw, (max-width:1024px) 200px, 342px"
-                    alt={item.title || item.name}
-                    fill
-                    decoding="sync"
-                    className="object-cover rounded-md"
-                    quality={75}
-                    priority={index < 6 ? true : false}
-                    loading={index >= 6 ? "lazy" : "eager"}
-                  />
+                  {typeof item.poster_path === "string" ? (
+                    <ImageWithSkeleton
+                      src={posterURL(item.poster_path)}
+                      alt={
+                        typeof item.title === "string"
+                          ? item.title
+                          : typeof item.name === "string"
+                          ? item.name
+                          : ""
+                      }
+                      fill
+                      className="object-cover rounded-md"
+                      quality={70}
+                      priority={index < 6 ? true : false}
+                      loading={index >= 6 ? "lazy" : "eager"}
+                    />
+                  ) : (
+                    <div className="bg-neutral-700 w-full h-full rounded-md" />
+                  )}
                 </div>
                 <div className="flex flex-col space-y-2">
                   <p className="text-xs md:line-clamp-1 lg:text-[13px] font-semibold">
