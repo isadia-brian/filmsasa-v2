@@ -1,20 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Heart, PlayIcon, PlusIcon } from "lucide-react";
+import { PlayIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { aquire } from "@/app/fonts";
-import { addToUserList } from "@/features/users/server/db";
-import { FilmData } from "@/types/films";
-import { useRouter } from "next/navigation";
-import { posterURL } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { FavoriteBtn, WatchListBtn } from "./ActionBtns";
 
 const TmdbContent = dynamic(
   () => import("../../features/films/components/TmdbContent"),
 );
+
 const PrewatchClient = (props: {
   film: any;
   kidsPage?: boolean;
@@ -23,9 +20,6 @@ const PrewatchClient = (props: {
   const { film, kidsPage, userId } = props;
 
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const { toast } = useToast();
 
   const {
     title,
@@ -43,70 +37,31 @@ const PrewatchClient = (props: {
     runtime,
   } = film;
 
-  const handleClick = useCallback(
-    async (tmdbId: number, action: "favorites" | "watchlist") => {
-      if (!userId) {
-        toast({
-          title: "Not Logged in",
-          variant: "destructive",
-          description: `Kindly sign in to add to your '${action}' `,
-        });
-        return;
-      } else if (loading) {
-        return;
-      } else {
-        try {
-          setLoading(true);
-          const film: FilmData = {
-            title,
-            mediaType,
-            posterImage: posterURL(posterImage),
-            tmdbPosterUrl: posterImage,
-          };
-          const response = await addToUserList(userId, tmdbId, action, film);
-          const { success, message } = response;
-
-          toast({
-            title: success ? "Success" : "Error",
-            variant: success ? "default" : "destructive",
-            description: message,
-          });
-
-          if (success) router.refresh();
-        } catch (error) {
-          toast({
-            title: "Error",
-            variant: "destructive",
-            description: `An error occurred while adding to your '${action}'`,
-          });
-          return;
-        } finally {
-          setLoading(false);
-        }
-      }
-    },
-    [loading, toast],
-  );
-
-  const toggleYoutube = () => {
-    setTrailerOpen(!trailerOpen);
+  const buttonData = {
+    userId,
+    title,
+    mediaType,
+    posterImage,
+    tmdbId,
   };
 
-  let duration: string = "";
+  const duration = useMemo(() => {
+    if (runtime) return runtime;
+    return seriesData?.seasons === 1
+      ? "1 season"
+      : `${seriesData?.seasons} seasons`;
+  }, [runtime, seriesData]);
 
-  if (runtime) {
-    duration = runtime;
-  } else {
-    duration =
-      seriesData?.seasons === 1 ? "1 season" : `${seriesData?.seasons} seasons`;
-  }
-
-  const firstThreeGenres = genres.slice(0, 3);
-
-  const genresText =
-    firstThreeGenres.length > 1
+  const genresText = useMemo(() => {
+    const firstThreeGenres = genres.slice(0, 3);
+    return firstThreeGenres.length > 1
       ? firstThreeGenres.join(" - ")
       : firstThreeGenres[0] || "";
+  }, [genres]);
+
+  const toggleYoutube = useCallback(() => {
+    setTrailerOpen((prev) => !prev);
+  }, []);
 
   return (
     <div
@@ -115,7 +70,9 @@ const PrewatchClient = (props: {
       }`}
     >
       <div
-        className={`relative w-full flex flex-col justify-center ${kidsPage ? "h-[100vh]" : "h-[60vh] md:h-[80vh]"}`}
+        className={`relative w-full flex flex-col justify-center ${
+          kidsPage ? "h-[100vh]" : "h-[60vh] md:h-[80vh]"
+        }`}
       >
         <div className="relative h-full w-full">
           <Image
@@ -138,13 +95,7 @@ const PrewatchClient = (props: {
             >
               {title}
             </h4>
-            <div
-              className="mr-4 cursor-pointer"
-              role="button"
-              onClick={() => handleClick(tmdbId, "favorites")}
-            >
-              <Heart className="h-8 w-8" />
-            </div>
+            <FavoriteBtn {...buttonData} />
           </div>
 
           <div className="md:absolute md:z-[1500]  md:h-full md:top-0  flex items-center justify-center md:left-[50%] md:-translate-x-1/2 md:w-fit">
@@ -168,17 +119,9 @@ const PrewatchClient = (props: {
                 <p>{year}</p>
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
                 <div>
-                  {runtime && (
-                    <p className="flex items-center gap-2">
-                      <span>{runtime}</span>
-                    </p>
-                  )}
-                  {seriesData && seriesData.seasons && (
-                    <p className=" flex items-center gap-2">
-                      {seriesData.seasons}{" "}
-                      {seriesData.seasons > 1 ? "seasons" : "season"}
-                    </p>
-                  )}
+                  <p className="flex items-center gap-2">
+                    <span>{duration}</span>
+                  </p>
                 </div>
 
                 <div className="h-[5px] w-[5px] bg-white rounded-full" />
@@ -218,16 +161,7 @@ const PrewatchClient = (props: {
               </span>
               Watch Trailer
             </button>
-            <button
-              type="button"
-              onClick={() => handleClick(tmdbId, "watchlist")}
-              className="transition-colors flex items-center justify-center gap-2 py-1.5 md:py-2 w-[120px] md:w-[140px] uppercase cursor-pointer border border-white text-sm hover:bg-black hover:text-white hover:border-black"
-            >
-              <span>
-                <PlusIcon className="h-4 w-4" />
-              </span>
-              WatchList
-            </button>
+            <WatchListBtn {...buttonData} />
           </div>
         </div>
       </div>
