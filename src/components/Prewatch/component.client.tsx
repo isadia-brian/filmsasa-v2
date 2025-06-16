@@ -9,7 +9,7 @@ import { aquire } from "@/app/fonts";
 import { FavoriteBtn, WatchListBtn } from "./ActionBtns";
 
 const TmdbContent = dynamic(
-  () => import("../../features/films/components/TmdbContent"),
+  () => import("../../features/films/components/TmdbContent")
 );
 
 const PrewatchClient = (props: {
@@ -71,7 +71,7 @@ const PrewatchClient = (props: {
     >
       <div
         className={`relative w-full flex flex-col justify-center ${
-          kidsPage ? "h-[100vh]" : "h-[60vh] md:h-[80vh]"
+          kidsPage ? "h-[100vh]" : "h-[70vh] md:h-[80vh]"
         }`}
       >
         <div className="relative h-full w-full">
@@ -79,13 +79,11 @@ const PrewatchClient = (props: {
             src={`https://image.tmdb.org/t/p/w1280${backdropImage}`}
             alt={title}
             fill
-            quality={75}
+            quality={kidsPage ? 100 : 80}
             className="object-cover"
             priority={true}
             loading="eager"
-            sizes="
-          (max-width: 768px) 100vw,1280px
-        "
+            sizes="(max-width: 768px) 100vw, 100vw"
           />
         </div>
         <div className="absolute flex flex-col space-y-12 h-full w-full overflow-x-hidden left-0 bg-linear-to-tl from-black/60 via-black/30 to-black/60 text-white pt-[100px] md:pt-[150px] pb-4 px-4">
