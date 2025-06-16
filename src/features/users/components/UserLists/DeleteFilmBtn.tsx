@@ -33,7 +33,7 @@ const DeleteFilmBtn = ({
       userId,
       tmdbId,
       action,
-      filmTitle,
+      filmTitle
     );
 
     const { success, message } = response;
@@ -49,7 +49,7 @@ const DeleteFilmBtn = ({
     <button
       type="button"
       onClick={handleClick}
-      className="absolute top-3 right-3 flex items-center justify-center rounded-full h-6 w-6 bg-red-400 cursor-pointer text-white hover:bg-red-500 transition-colors"
+      className="absolute top-3 z-10 right-3 flex items-center justify-center rounded-full h-6 w-6 bg-red-400 cursor-pointer text-white hover:bg-red-500 transition-colors"
     >
       <X size={14} />
     </button>

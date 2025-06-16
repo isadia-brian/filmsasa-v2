@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+//import { useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -23,7 +23,7 @@ interface UserListProps {
 }
 
 const UserList = ({ title, films, action, userId }: UserListProps) => {
-  const scrollWatchListContainer = useRef<HTMLDivElement | null>(null);
+  //const scrollWatchListContainer = useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,43 +51,44 @@ const UserList = ({ title, films, action, userId }: UserListProps) => {
           {films?.map(
             (
               { title, posterImage, tmdbPosterUrl, mediaType, tmdbId },
-              index,
+              index
             ) => (
-              <Link
-                href={{
-                  pathname: "/watch",
+              <div className="relative w-[130px]" key={index}>
+                <Link
+                  href={{
+                    pathname: "/watch",
 
-                  query: { media: mediaType, id: tmdbId },
-                }}
-                key={index}
-                className="w-[130px] flex flex-col gap-1"
-                prefetch={false}
-              >
-                <div className="relative h-[190px] rounded-lg w-full">
-                  <Image
-                    src={
-                      typeof posterImage === "string"
-                        ? posterImage
-                        : typeof tmdbPosterUrl === "string"
+                    query: { media: mediaType, id: tmdbId },
+                  }}
+                  className="w-full flex flex-col gap-1"
+                  prefetch={false}
+                >
+                  <div className="relative h-[190px] rounded-lg w-full">
+                    <Image
+                      src={
+                        typeof posterImage === "string"
+                          ? posterImage
+                          : typeof tmdbPosterUrl === "string"
                           ? posterURL(tmdbPosterUrl)
                           : "/placeholder.webp"
-                    }
-                    alt={typeof title === "string" ? title : ""}
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                  <DeleteFilmBtn
-                    userId={userId}
-                    filmTitle={title}
-                    action={action}
-                    tmdbId={tmdbId}
-                  />
-                </div>
-                <p className="text-sm leading-[1.2] w-full line-clamp-2">
-                  {title}
-                </p>
-              </Link>
-            ),
+                      }
+                      alt={typeof title === "string" ? title : ""}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+                  <p className="text-sm leading-[1.2] w-full line-clamp-2">
+                    {title}
+                  </p>
+                </Link>
+                <DeleteFilmBtn
+                  userId={userId}
+                  filmTitle={title}
+                  action={action}
+                  tmdbId={tmdbId}
+                />
+              </div>
+            )
           )}
         </div>
       </div>

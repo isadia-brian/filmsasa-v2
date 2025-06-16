@@ -15,6 +15,7 @@ type UserListData =
       year: number | null;
       mediaType: "movie" | "tv";
       posterImage: string | null;
+      tmdbPosterUrl: string | null;
     }[]
   | null;
 
@@ -26,7 +27,7 @@ const getUser = async (userId: number) => {
 
 export const fetchUserData = unstable_cache(
   async (
-    userId: number,
+    userId: number
   ): Promise<{ favorites: UserListData; watchlist: UserListData } | null> => {
     const existingUser = await db.query.users.findFirst({
       where: eq(users.id, userId),
@@ -35,7 +36,7 @@ export const fetchUserData = unstable_cache(
         userFilms: {
           where: or(
             eq(userFilms.isFavorite, true),
-            eq(userFilms.isWatchlist, true),
+            eq(userFilms.isWatchlist, true)
           ),
           orderBy: [desc(userFilms.updated_at)],
         },
@@ -75,7 +76,7 @@ export const fetchUserData = unstable_cache(
     };
   },
   ["user_data"],
-  { revalidate: 3600 },
+  { revalidate: 3600 }
 );
 
 export const addToUserList = cache(
@@ -83,7 +84,7 @@ export const addToUserList = cache(
     userId: number,
     tmdbId: number,
     action: "favorites" | "watchlist",
-    filmData: FilmData,
+    filmData: FilmData
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const existingUser = await getUser(userId);
@@ -159,7 +160,7 @@ export const addToUserList = cache(
         message: "An error occurred on the server",
       };
     }
-  },
+  }
 );
 
 export const removeFromUserList = cache(
@@ -167,7 +168,7 @@ export const removeFromUserList = cache(
     userId: number,
     tmdbId: number,
     action: "favorites" | "watchlist",
-    filmTitle: string,
+    filmTitle: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const existingUser = await getUser(userId);
@@ -245,5 +246,5 @@ export const removeFromUserList = cache(
         message: "An error occurred on the server",
       };
     }
-  },
+  }
 );
