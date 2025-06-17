@@ -34,3 +34,21 @@ export type User = {
   role: UserRole;
   username: string;
 } | null;
+
+export interface HeroProptype {
+  film: {
+    title: string;
+    backdropImage: string;
+    posterImage: string;
+    genres: string[];
+    mediaType: "movie" | "tv";
+    tmdbId: number;
+    contentType: string;
+    overview: string;
+    seasons: number | null;
+    runtime: string | null;
+    tmdbPosterUrl: string;
+  };
+  userId?: number;
+  priorityLoad?: boolean;
+}

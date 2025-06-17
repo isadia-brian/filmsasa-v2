@@ -12,13 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { FilmData } from "@/types/films";
 import { useRouter } from "next/navigation";
 
-type Proptype = {
-  film: any;
-  userId?: number;
-  priorityLoad?: boolean;
-};
+import { HeroProptype } from "@/types";
 
-export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
+export const HeroMovieCard = memo(function HeroMovieCard(props: HeroProptype) {
   const { film, userId, priorityLoad = false } = props;
   const {
     title,
@@ -71,6 +67,12 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
           if (success) router.refresh();
         } catch (error) {
           console.log("Error posting" + error);
+          toast({
+            title: "Error",
+            variant: "destructive",
+            description:
+              "An error occurred while adding to favorites. Please try again later.",
+          });
           return;
         } finally {
           setLoading(false);
