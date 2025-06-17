@@ -58,7 +58,7 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
             userId,
             tmdbId,
             "favorites",
-            film,
+            film
           );
           const { success, message } = response;
 
@@ -70,14 +70,14 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: Proptype) {
 
           if (success) router.refresh();
         } catch (error) {
-          console.log("Error posting");
+          console.log("Error posting" + error);
           return;
         } finally {
           setLoading(false);
         }
       }
     },
-    [loading, toast],
+    [loading, toast]
   );
 
   return (

@@ -46,3 +46,9 @@ export const getUser = cache(async () => {
     return null;
   }
 });
+
+export const getUserId = cache(async () => {
+  const user = await getUser();
+  const userId = user?.id;
+  return userId;
+});
