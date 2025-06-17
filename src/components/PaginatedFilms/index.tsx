@@ -71,8 +71,8 @@ const PaginatedFilms = ({
                       fill
                       className="object-cover rounded-md"
                       quality={70}
-                      priority={index < 6 ? true : false}
-                      loading={index >= 6 ? "lazy" : "eager"}
+                      priority={index < 12 ? true : false}
+                      loading={index >= 12 ? "lazy" : "eager"}
                     />
                   ) : (
                     <div className="bg-neutral-700 w-full h-full rounded-md" />
