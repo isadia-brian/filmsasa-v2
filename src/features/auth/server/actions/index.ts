@@ -51,7 +51,7 @@ export async function modalSignUp(state: FormState, formData: FormData) {
       };
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const username = generateUsername();
 
     //create a user in the db
@@ -75,9 +75,10 @@ export async function modalSignUp(state: FormState, formData: FormData) {
       message: "Successfully created account",
     };
   } catch (error) {
+    console.error("Signup error:", error);
     return {
       success: false,
-      message: "An Error occured on the server while processing the request",
+      message: "An error occurred on the server while processing the request",
     };
   }
 }
@@ -122,7 +123,10 @@ export const modalSignIn = async (state: FormState, formData: FormData) => {
     return {
       success: true,
     };
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
     console.error(error);
     return {
       success: false,
@@ -158,7 +162,7 @@ export async function signup(state: FormState, formData: FormData) {
     };
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 12);
   const username = generateUsername();
 
   //create a user in the db

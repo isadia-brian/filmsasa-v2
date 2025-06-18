@@ -4,6 +4,7 @@ import { posterURL } from "@/lib/utils";
 import { ClientPagination } from "../ClientPagination";
 import dynamic from "next/dynamic";
 import { PaginatedFilmsData } from "@/types/films";
+import { getContentLink } from "@/lib/navigation";
 
 const ImageWithSkeleton = dynamic(
   () => import("@/components/ImageWithSkeleton")
@@ -26,24 +27,8 @@ const PaginatedFilms = ({
     <div className="text-white w-full min-h-[70vh] relative" id="top">
       <ul className="pt-4 md:pt-6 pb-10 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full gap-x-[10px] md:gap-x-[16px] gap-y-10 lg:gap-x-[10px] md:mb-4">
         {allFilms?.map((item, index: number) => {
-          let link: string = "";
-          const categoryTitle = media_type;
-          switch (categoryTitle) {
-            case "tv":
-              link = `/series/${item.id}`;
-              break;
+          const link = media_type ? getContentLink(media_type, item.id) : "/";
 
-            case "movie":
-              link = `/movies/${item.id}`;
-              break;
-
-            case "kids":
-              link = `/kids/${item.id}`;
-              break;
-
-            default:
-              break;
-          }
           return (
             <li
               key={index}
@@ -71,8 +56,9 @@ const PaginatedFilms = ({
                       fill
                       className="object-cover rounded-md"
                       quality={70}
-                      priority={index < 12 ? true : false}
+                      priority={index < 12}
                       loading={index >= 12 ? "lazy" : "eager"}
+                      sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
                     />
                   ) : (
                     <div className="bg-neutral-700 w-full h-full rounded-md" />

@@ -11,7 +11,7 @@ import { addToUserList } from "@/features/users/server/db";
 import { useToast } from "@/hooks/use-toast";
 import { FilmData } from "@/types/films";
 import { useRouter } from "next/navigation";
-
+import { getContentLink } from "@/lib/navigation";
 import { HeroProptype } from "@/types";
 
 export const HeroMovieCard = memo(function HeroMovieCard(props: HeroProptype) {
@@ -90,9 +90,10 @@ export const HeroMovieCard = memo(function HeroMovieCard(props: HeroProptype) {
         quality={priorityLoad ? 90 : 75}
         fill
         sizes="
-          (max-width: 768px) 100vw,
-          (max-width: 1280px) 1280px,
-          1280px
+          (max-width: 480px) 100vw,
+          (max-width: 768px) 90vw,
+          (max-width: 1280px) 80vw,
+          70vw
         "
         className={`object-cover object-center md:object-top`}
         priority={priorityLoad}
@@ -181,37 +182,18 @@ const RenderLink = ({
   category: string;
   tmdbId: number;
 }) => {
-  if (category) {
-    let link: string = "";
-    const categoryTitle = category;
-    switch (categoryTitle) {
-      case "tv":
-        link = `/series/${tmdbId}`;
-        break;
+  if (!category) return null;
 
-      case "movie":
-        link = `/movies/${tmdbId}`;
-        break;
+  const link = getContentLink(category as "movie" | "tv" | "kids", tmdbId);
 
-      case "kids":
-        link = `/kids/${tmdbId}`;
-        break;
-
-      default:
-        break;
-    }
-
-    return (
-      <Link
-        prefetch={false}
-        href={{
-          pathname: link,
-        }}
-        className="flex items-center justify-center whitespace-nowrap pl-4 pr-6 h-10 rounded space-x-2  bg-linear-to-r from-orange-500 to-red-500 text-black cursor-pointer  transition-colors gradient element-to-rotate"
-      >
-        <Play className="h-3 w-3" fill="white" stroke="white" />
-        <span className="text-base">Watch Now</span>
-      </Link>
-    );
-  }
+  return (
+    <Link
+      prefetch={false}
+      href={link}
+      className="flex items-center justify-center whitespace-nowrap pl-4 pr-6 h-10 rounded space-x-2  bg-linear-to-r from-orange-500 to-red-500 text-black cursor-pointer  transition-colors gradient element-to-rotate"
+    >
+      <Play className="h-3 w-3" fill="white" stroke="white" />
+      <span className="text-base">Watch Now</span>
+    </Link>
+  );
 };
